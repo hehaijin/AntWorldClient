@@ -19,7 +19,7 @@ import antworld.common.AntAction.AntActionType;
 public class ClientRandomWalk
 {
   private static final boolean DEBUG = true;
-  private static final TeamNameEnum myTeam = TeamNameEnum.RANDOM_WALKERS;
+  private final TeamNameEnum myTeam;
   private static final long password = 962740848319L;//Each team has been assigned a random password.
   private ObjectInputStream inputStream = null;
   private ObjectOutputStream outputStream = null;
@@ -37,23 +37,21 @@ public class ClientRandomWalk
   private static Random random = Constants.random;
 
 
-  public ClientRandomWalk(String host, int portNumber)
+  public ClientRandomWalk(String host, int portNumber, TeamNameEnum team)
   {
-    System.out.println("Starting ClientRandomWalk: " + System.currentTimeMillis());
-    isConnected = false;
-    while (!isConnected)
-    {
-      isConnected = openConnection(host, portNumber);
-      if (!isConnected) try { Thread.sleep(2500); } catch (InterruptedException e1) {}
-    }
-    CommData data = chooseNest();
+    myTeam = team;
+    System.out.println("Starting " + team +" on " + host + ":" + portNumber + " at "
+      + System.currentTimeMillis());
+
+    isConnected = openConnection(host, portNumber);
+    if (!isConnected) System.exit(0);
+    CommData data = obtainNest();
     mainGameLoop(data);
     closeAll();
   }
 
   private boolean openConnection(String host, int portNumber)
   {
-
     try
     {
       clientSocket = new Socket(host, portNumber);
@@ -106,51 +104,57 @@ public class ClientRandomWalk
     }
   }
 
-  public CommData chooseNest()
+  /**
+   * This method is called ONCE after the socket has been opened.
+   * The server assigns a nest to this client with an initial ant population.
+   * @return a reusable CommData structure populated by the server.
+   */
+  public CommData obtainNest()
   {
-    while (myNestName == null)
-    {
-      try { Thread.sleep(100); } catch (InterruptedException e1) {}
-
-      //Pick a new nest when retrying. One common reason for a fail is that the requested nest is already taken.
-      NestNameEnum requestedNest = NestNameEnum.values()[random.nextInt(NestNameEnum.SIZE)];
-      CommData data = new CommData(requestedNest, myTeam);
+      CommData data = new CommData(myTeam);
       data.password = password;
-      
+
       if( sendCommData(data) )
       {
         try
         {
           if (DEBUG) System.out.println("ClientRandomWalk: listening to socket....");
-          CommData recvData = (CommData) inputStream.readObject();
-          if (DEBUG) System.out.println("ClientRandomWalk: received <<<<<<<<<"+inputStream.available()+"<...\n" + recvData);
+          data = (CommData) inputStream.readObject();
+          if (DEBUG) System.out.println("ClientRandomWalk: received <<<<<<<<<"+inputStream.available()+"<...\n" + data);
           
-          if (recvData.errorMsg != null)
+          if (data.errorMsg != null)
           {
-            System.err.println("ClientRandomWalk***ERROR***: " + recvData.errorMsg);
-            continue;
-          }
-  
-          if ((myNestName == null) && (recvData.myTeam == myTeam))
-          { myNestName = recvData.myNest;
-            centerX = recvData.nestData[myNestName.ordinal()].centerX;
-            centerY = recvData.nestData[myNestName.ordinal()].centerY;
-            System.out.println("ClientRandomWalk: !!!!!Nest Request Accepted!!!! " + myNestName);
-            return recvData;
+            System.err.println("ClientRandomWalk***ERROR***: " + data.errorMsg);
+            System.exit(0);
           }
         }
         catch (IOException e)
         {
           System.err.println("ClientRandomWalk***ERROR***: client read failed");
           e.printStackTrace();
+          System.exit(0);
         }
         catch (ClassNotFoundException e)
         {
           System.err.println("ClientRandomWalk***ERROR***: client sent incorrect common format");
         }
       }
+    if (data.myTeam != myTeam)
+    {
+      System.err.println("ClientRandomWalk***ERROR***: Server returned wrong team name: "+data.myTeam);
+      System.exit(0);
     }
-    return null;
+    if (data.myNest == null)
+    {
+      System.err.println("ClientRandomWalk***ERROR***: Server returned NULL nest");
+      System.exit(0);
+    }
+
+    myNestName = data.myNest;
+    centerX = data.nestData[myNestName.ordinal()].centerX;
+    centerY = data.nestData[myNestName.ordinal()].centerY;
+    System.out.println("ClientRandomWalk: ==== Nest Assigned ===>: " + myNestName);
+    return data;
   }
     
   public void mainGameLoop(CommData data)
@@ -325,13 +329,25 @@ public class ClientRandomWalk
     return action;
   }
 
+
+  /**
+   * The last argument is taken as the host name.
+   * The default host is localhost.
+   * Also supports an optional option for the teamname.
+   * The default teamname is TeamNameEnum.RANDOM_WALKERS.
+   * @param args Array of command-line arguments.
+   */
   public static void main(String[] args)
   {
     String serverHost = "localhost";
-    if (args.length > 0) serverHost = args[0];
-    System.out.println("Starting client with connection to: " + serverHost);
+    if (args.length > 0) serverHost = args[args.length -1];
 
-    new ClientRandomWalk(serverHost, Constants.PORT);
+    TeamNameEnum team = TeamNameEnum.RANDOM_WALKERS;
+    if (args.length > 1)
+    { team = TeamNameEnum.getTeamByString(args[0]);
+    }
+
+    new ClientRandomWalk(serverHost, Constants.PORT, team);
   }
 
 }
