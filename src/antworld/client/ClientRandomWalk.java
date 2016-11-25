@@ -7,13 +7,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Random;
 
-import antworld.common.AntAction;
-import antworld.common.AntData;
-import antworld.common.CommData;
-import antworld.common.Constants;
-import antworld.common.Direction;
-import antworld.common.NestNameEnum;
-import antworld.common.TeamNameEnum;
+import antworld.common.*;
 import antworld.common.AntAction.AntActionType;
 
 public class ClientRandomWalk
@@ -305,8 +299,49 @@ public class ClientRandomWalk
 
   private AntAction chooseAction(CommData data, AntData ant)
   {
+    if(ant.antType == AntType.ATTACK) return chooseActionAttack(data, ant);
+    if(ant.antType == AntType.DEFENCE) return chooseActionAttack(data, ant);
+    if(ant.antType == AntType.SPEED) return chooseActionAttack(data, ant);
+    if(ant.antType == AntType.VISION) return chooseActionAttack(data, ant);
+    if(ant.antType == AntType.WORKER) return chooseActionAttack(data, ant);
+    if(ant.antType == AntType.MEDIC) return chooseActionAttack(data, ant);
+
+    return new AntAction(AntActionType.STASIS);
+  }
+
+  // ATTACK DEFENCE MEDIC SPEED VISION WORKER
+
+  private AntAction chooseActionWorker(CommData data, AntData ant)
+{
+  AntAction action = new AntAction(AntActionType.STASIS);
+
+  if (ant.ticksUntilNextAction > 0) return action;
+
+  if (exitNest(ant, action)) return action;
+
+  if (attackAdjacent(ant, action)) return action;
+
+  if (pickUpFoodAdjacent(ant, action)) return action;
+
+  if (goHomeIfCarryingOrHurt(ant, action)) return action;
+
+  if (pickUpWater(ant, action)) return action;
+
+  if (goToEnemyAnt(ant, action)) return action;
+
+  if (goToFood(ant, action)) return action;
+
+  if (goToGoodAnt(ant, action)) return action;
+
+  if (goExplore(ant, action)) return action;
+
+  return action;
+}
+
+  private AntAction chooseActionAttack(CommData data, AntData ant)
+  {
     AntAction action = new AntAction(AntActionType.STASIS);
-    
+
     if (ant.ticksUntilNextAction > 0) return action;
 
     if (exitNest(ant, action)) return action;
@@ -330,6 +365,113 @@ public class ClientRandomWalk
     return action;
   }
 
+  private AntAction chooseActionDefence(CommData data, AntData ant)
+  {
+    AntAction action = new AntAction(AntActionType.STASIS);
+
+    if (ant.ticksUntilNextAction > 0) return action;
+
+    if (exitNest(ant, action)) return action;
+
+    if (attackAdjacent(ant, action)) return action;
+
+    if (pickUpFoodAdjacent(ant, action)) return action;
+
+    if (goHomeIfCarryingOrHurt(ant, action)) return action;
+
+    if (pickUpWater(ant, action)) return action;
+
+    if (goToEnemyAnt(ant, action)) return action;
+
+    if (goToFood(ant, action)) return action;
+
+    if (goToGoodAnt(ant, action)) return action;
+
+    if (goExplore(ant, action)) return action;
+
+    return action;
+  }
+
+  private AntAction chooseActionMedic(CommData data, AntData ant)
+  {
+    AntAction action = new AntAction(AntActionType.STASIS);
+
+    if (ant.ticksUntilNextAction > 0) return action;
+
+    if (exitNest(ant, action)) return action;
+
+    if (attackAdjacent(ant, action)) return action;
+
+    if (pickUpFoodAdjacent(ant, action)) return action;
+
+    if (goHomeIfCarryingOrHurt(ant, action)) return action;
+
+    if (pickUpWater(ant, action)) return action;
+
+    if (goToEnemyAnt(ant, action)) return action;
+
+    if (goToFood(ant, action)) return action;
+
+    if (goToGoodAnt(ant, action)) return action;
+
+    if (goExplore(ant, action)) return action;
+
+    return action;
+  }
+
+  private AntAction chooseActionVision(CommData data, AntData ant)
+  {
+    AntAction action = new AntAction(AntActionType.STASIS);
+
+    if (ant.ticksUntilNextAction > 0) return action;
+
+    if (exitNest(ant, action)) return action;
+
+    if (attackAdjacent(ant, action)) return action;
+
+    if (pickUpFoodAdjacent(ant, action)) return action;
+
+    if (goHomeIfCarryingOrHurt(ant, action)) return action;
+
+    if (pickUpWater(ant, action)) return action;
+
+    if (goToEnemyAnt(ant, action)) return action;
+
+    if (goToFood(ant, action)) return action;
+
+    if (goToGoodAnt(ant, action)) return action;
+
+    if (goExplore(ant, action)) return action;
+
+    return action;
+  }
+
+  private AntAction chooseActionSpeed(CommData data, AntData ant)
+  {
+    AntAction action = new AntAction(AntActionType.STASIS);
+
+    if (ant.ticksUntilNextAction > 0) return action;
+
+    if (exitNest(ant, action)) return action;
+
+    if (attackAdjacent(ant, action)) return action;
+
+    if (pickUpFoodAdjacent(ant, action)) return action;
+
+    if (goHomeIfCarryingOrHurt(ant, action)) return action;
+
+    if (pickUpWater(ant, action)) return action;
+
+    if (goToEnemyAnt(ant, action)) return action;
+
+    if (goToFood(ant, action)) return action;
+
+    if (goToGoodAnt(ant, action)) return action;
+
+    if (goExplore(ant, action)) return action;
+
+    return action;
+  }
 
   /**
    * The last argument is taken as the host name.
