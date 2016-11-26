@@ -12,7 +12,7 @@ import antworld.common.AntAction.AntActionType;
 
 public class ClientRandomWalk
 {
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
   private final TeamNameEnum myTeam;
   private static final long password = 962740848319L;//Each team has been assigned a random password.
   private ObjectInputStream inputStream = null;
@@ -173,7 +173,7 @@ public class ClientRandomWalk
 
         CommData sendData = data.packageForSendToServer();
         
-        System.out.println("antworld.client.ClientRandomWalk: Sending>>>>>>>: " + sendData);
+        if(DEBUG) System.out.println("antworld.client.ClientRandomWalk: Sending>>>>>>>: " + sendData);
         outputStream.writeObject(sendData);
         outputStream.flush();
         outputStream.reset();
