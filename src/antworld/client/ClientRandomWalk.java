@@ -20,9 +20,17 @@ public class ClientRandomWalk
   private boolean isConnected = false;
   private NestNameEnum myNestName = null;
   private int centerX, centerY;
- 
 
   private Socket clientSocket;
+
+  /* I was thinking putting paramaters that the ants use to make decisions here
+   * For example, one paramater I was thinking is enemy health. Depending of the health of the enemy
+   * the ant can decide to attack or flee */
+
+  private static final int GENERAL_ANT_ATTACK_HEALTH = 20;
+  private static final int ATTACK_ANT_ATTACK_HEALTH = 20;
+  private static final int DEFENSE_ANT_ATTACK_HEALTH = 20;
+
 
 
   //A random number generator is created in Constants. Use it.
@@ -299,158 +307,9 @@ public class ClientRandomWalk
 
   private AntAction chooseAction(CommData data, AntData ant)
   {
-    if(ant.antType == AntType.ATTACK) return chooseActionAttack(data, ant);
-    if(ant.antType == AntType.DEFENCE) return chooseActionAttack(data, ant);
-    if(ant.antType == AntType.SPEED) return chooseActionAttack(data, ant);
-    if(ant.antType == AntType.VISION) return chooseActionAttack(data, ant);
-    if(ant.antType == AntType.WORKER) return chooseActionAttack(data, ant);
-    if(ant.antType == AntType.MEDIC) return chooseActionAttack(data, ant);
-
-    return new AntAction(AntActionType.STASIS);
-  }
-
-  // ATTACK DEFENCE MEDIC SPEED VISION WORKER
-
-  private AntAction chooseActionWorker(CommData data, AntData ant)
-{
-  AntAction action = new AntAction(AntActionType.STASIS);
-
-  if (ant.ticksUntilNextAction > 0) return action;
-
-  if (exitNest(ant, action)) return action;
-
-  if (attackAdjacent(ant, action)) return action;
-
-  if (pickUpFoodAdjacent(ant, action)) return action;
-
-  if (goHomeIfCarryingOrHurt(ant, action)) return action;
-
-  if (pickUpWater(ant, action)) return action;
-
-  if (goToEnemyAnt(ant, action)) return action;
-
-  if (goToFood(ant, action)) return action;
-
-  if (goToGoodAnt(ant, action)) return action;
-
-  if (goExplore(ant, action)) return action;
-
-  return action;
-}
-
-  private AntAction chooseActionAttack(CommData data, AntData ant)
-  {
     AntAction action = new AntAction(AntActionType.STASIS);
 
-    if (ant.ticksUntilNextAction > 0) return action;
-
-    if (exitNest(ant, action)) return action;
-
-    if (attackAdjacent(ant, action)) return action;
-
-    if (pickUpFoodAdjacent(ant, action)) return action;
-
-    if (goHomeIfCarryingOrHurt(ant, action)) return action;
-
-    if (pickUpWater(ant, action)) return action;
-
-    if (goToEnemyAnt(ant, action)) return action;
-
-    if (goToFood(ant, action)) return action;
-
-    if (goToGoodAnt(ant, action)) return action;
-
-    if (goExplore(ant, action)) return action;
-
-    return action;
-  }
-
-  private AntAction chooseActionDefence(CommData data, AntData ant)
-  {
-    AntAction action = new AntAction(AntActionType.STASIS);
-
-    if (ant.ticksUntilNextAction > 0) return action;
-
-    if (exitNest(ant, action)) return action;
-
-    if (attackAdjacent(ant, action)) return action;
-
-    if (pickUpFoodAdjacent(ant, action)) return action;
-
-    if (goHomeIfCarryingOrHurt(ant, action)) return action;
-
-    if (pickUpWater(ant, action)) return action;
-
-    if (goToEnemyAnt(ant, action)) return action;
-
-    if (goToFood(ant, action)) return action;
-
-    if (goToGoodAnt(ant, action)) return action;
-
-    if (goExplore(ant, action)) return action;
-
-    return action;
-  }
-
-  private AntAction chooseActionMedic(CommData data, AntData ant)
-  {
-    AntAction action = new AntAction(AntActionType.STASIS);
-
-    if (ant.ticksUntilNextAction > 0) return action;
-
-    if (exitNest(ant, action)) return action;
-
-    if (attackAdjacent(ant, action)) return action;
-
-    if (pickUpFoodAdjacent(ant, action)) return action;
-
-    if (goHomeIfCarryingOrHurt(ant, action)) return action;
-
-    if (pickUpWater(ant, action)) return action;
-
-    if (goToEnemyAnt(ant, action)) return action;
-
-    if (goToFood(ant, action)) return action;
-
-    if (goToGoodAnt(ant, action)) return action;
-
-    if (goExplore(ant, action)) return action;
-
-    return action;
-  }
-
-  private AntAction chooseActionVision(CommData data, AntData ant)
-  {
-    AntAction action = new AntAction(AntActionType.STASIS);
-
-    if (ant.ticksUntilNextAction > 0) return action;
-
-    if (exitNest(ant, action)) return action;
-
-    if (attackAdjacent(ant, action)) return action;
-
-    if (pickUpFoodAdjacent(ant, action)) return action;
-
-    if (goHomeIfCarryingOrHurt(ant, action)) return action;
-
-    if (pickUpWater(ant, action)) return action;
-
-    if (goToEnemyAnt(ant, action)) return action;
-
-    if (goToFood(ant, action)) return action;
-
-    if (goToGoodAnt(ant, action)) return action;
-
-    if (goExplore(ant, action)) return action;
-
-    return action;
-  }
-
-  private AntAction chooseActionSpeed(CommData data, AntData ant)
-  {
-    AntAction action = new AntAction(AntActionType.STASIS);
-
-    if (ant.ticksUntilNextAction > 0) return action;
+    if (ant.ticksUntilNextAction > 0) return ant.myAction;
 
     if (exitNest(ant, action)) return action;
 
