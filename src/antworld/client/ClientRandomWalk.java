@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Comparator;
 import java.util.Random;
 
 import antworld.common.*;
@@ -27,9 +28,9 @@ public class ClientRandomWalk
    * For example, one paramater I was thinking is enemy health. Depending of the health of the enemy
    * the ant can decide to attack or flee */
 
-  private static final int GENERAL_ANT_ATTACK_HEALTH = 20;
-  private static final int ATTACK_ANT_ATTACK_HEALTH = 20;
-  private static final int DEFENSE_ANT_ATTACK_HEALTH = 20;
+  private static final int GENERAL_ANT_ATTACK_HEALTH_DIFF = 3;
+  private static final int ATTACK_ANT_ATTACK_HEALTH_DIFF = 3;
+  private static final int DEFENSE_ANT_ATTACK_HEALTH_DIFF = 3;
 
 
 
@@ -248,6 +249,30 @@ public class ClientRandomWalk
   //   ant is underground.
   // Returns true if an action was set. Otherwise returns false
   //=============================================================================
+
+  // Gives the direction of the adjacent food/enemy using coordinate subtraction
+  private Direction getDirection(int xdiff, int ydiff)
+  {
+    if(ydiff == 1)
+    {
+      if(xdiff == 1) return Direction.NORTHEAST;
+      if(xdiff == 0) return Direction.NORTH;
+      if(xdiff == -1) return Direction.NORTHWEST;
+    }
+    if(ydiff == 0)
+    {
+      if(xdiff == 1) return Direction.EAST;
+      if(xdiff == 0) return null;
+      if(xdiff == -1) return Direction.WEST;
+    }
+    if(ydiff == -1)
+    {
+      if(xdiff == 1) return Direction.SOUTHEAST;
+      if(xdiff == 0) return Direction.SOUTH;
+      if(xdiff == -1) return Direction.SOUTHWEST;
+    }
+    return null;
+  }
   private boolean exitNest(AntData ant, AntAction action)
   {
     if (ant.underground)
@@ -261,42 +286,82 @@ public class ClientRandomWalk
   }
 
 
-  private boolean attackAdjacent(AntData ant, AntAction action)
+  /**
+   * Determines if the ant will attack. Worth noting that it does not take into account the number of enemies.
+   * If there are too many enemies the ant should know before hand. This only considers if there is an enemy adjacent.
+   * @param data data containing nearby enemies.
+   * @param ant the current ant that needs to make a decision
+   * @param action action that the ant should take, might not be determined here
+   * @return true if ant decision was made here
+   */
+  private boolean attackAdjacent(CommData data, AntData ant, AntAction action)
+  {
+    AntType antType = ant.antType;
+    AntType enemyType;
+    for(AntData enemy : data.enemyAntSet)
+    {
+      enemyType = enemy.antType;
+      // enemy ant has to be next to our ant
+      if(Math.abs(ant.gridX - enemy.gridX) <= 1 && Math.abs(ant.gridY - enemy.gridY) <= 1)
+      {
+        // if this is the current ant
+        if(antType == AntType.WORKER || antType == AntType.MEDIC
+                || antType == AntType.SPEED || antType == AntType.VISION)
+        {
+          // if the enemy is one of these then attack
+          if(enemyType == AntType.WORKER || enemyType == AntType.MEDIC
+                  || enemyType == AntType.SPEED || enemyType == AntType.VISION)
+          {
+            action.type = AntActionType.ATTACK;
+            action.direction = getDirection(ant.gridX - enemy.gridX, ant.gridY - enemy.gridY);
+            return true;
+          }
+          else return false;
+        }
+        // if the ant is attack or defense attack enemy regardless of type
+        if(ant.antType == AntType.ATTACK)
+        {
+          action.type = AntActionType.ATTACK;
+          action.direction = getDirection(ant.gridX - enemy.gridX, ant.gridY - enemy.gridY);
+          return true;
+        }
+        break; // don't go through the rest
+      }
+    }
+    return false;
+  }
+
+  private boolean pickUpFoodAdjacent(CommData data, AntData ant, AntAction action)
   {
     return false;
   }
 
-  private boolean pickUpFoodAdjacent(AntData ant, AntAction action)
+  private boolean goHomeIfCarryingOrHurt(CommData data, AntData ant, AntAction action)
   {
     return false;
   }
 
-  private boolean goHomeIfCarryingOrHurt(AntData ant, AntAction action)
+  private boolean pickUpWater(CommData data, AntData ant, AntAction action)
   {
     return false;
   }
 
-  private boolean pickUpWater(AntData ant, AntAction action)
+  private boolean goToEnemyAnt(CommData data, AntData ant, AntAction action)
   {
     return false;
   }
 
-  private boolean goToEnemyAnt(AntData ant, AntAction action)
+  private boolean goToFood(CommData data, AntData ant, AntAction action)
   {
     return false;
   }
 
-  private boolean goToFood(AntData ant, AntAction action)
+  private boolean goToGoodAnt(CommData data, AntData ant, AntAction action)
   {
     return false;
   }
 
-  private boolean goToGoodAnt(AntData ant, AntAction action)
-  {
-    return false;
-  }
-
-  private boolean goExplore(AntData ant, AntAction action)
+  private boolean goExplore(CommData data, AntData ant, AntAction action)
   {
     Direction dir = Direction.getRandomDir();
     action.type = AntActionType.MOVE;
@@ -313,21 +378,21 @@ public class ClientRandomWalk
 
     if (exitNest(ant, action)) return action;
 
-    if (attackAdjacent(ant, action)) return action;
+    if (attackAdjacent(data, ant, action)) return action;
 
-    if (pickUpFoodAdjacent(ant, action)) return action;
+    if (pickUpFoodAdjacent(data, ant, action)) return action;
 
-    if (goHomeIfCarryingOrHurt(ant, action)) return action;
+    if (goHomeIfCarryingOrHurt(data, ant, action)) return action;
 
-    if (pickUpWater(ant, action)) return action;
+    if (pickUpWater(data, ant, action)) return action;
 
-    if (goToEnemyAnt(ant, action)) return action;
+    if (goToEnemyAnt(data, ant, action)) return action;
 
-    if (goToFood(ant, action)) return action;
+    if (goToFood(data, ant, action)) return action;
 
-    if (goToGoodAnt(ant, action)) return action;
+    if (goToGoodAnt(data, ant, action)) return action;
 
-    if (goExplore(ant, action)) return action;
+    if (goExplore(data, ant, action)) return action;
 
     return action;
   }
