@@ -319,7 +319,7 @@ public class ClientRandomWalk
           else return false;
         }
         // if the ant is attack or defense attack enemy regardless of type
-        if(ant.antType == AntType.ATTACK)
+        if(antType == AntType.ATTACK || antType == AntType.DEFENCE)
         {
           action.type = AntActionType.ATTACK;
           action.direction = getDirection(ant.gridX - enemy.gridX, ant.gridY - enemy.gridY);
@@ -333,6 +333,21 @@ public class ClientRandomWalk
 
   private boolean pickUpFoodAdjacent(CommData data, AntData ant, AntAction action)
   {
+    FoodData foodData;
+    for (FoodData food : data.foodSet)
+    {
+      foodData = food;
+      // enemy ant has to be next to our ant
+      if(ant.carryType == null)
+      {
+        if (Math.abs(ant.gridX - foodData.gridX) <= 1 && Math.abs(ant.gridY - foodData.gridY) <= 1)
+        {
+          action.type = AntActionType.PICKUP;
+          action.direction = getDirection(ant.gridX - foodData.gridX, ant.gridY - foodData.gridY);
+          return true;
+        }
+      }
+    }
     return false;
   }
 
