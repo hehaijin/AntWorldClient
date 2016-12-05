@@ -5,11 +5,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
 
 import antworld.common.*;
 import antworld.common.AntAction.AntActionType;
+import antworld.client.Coordinate;
 
 public class ClientRandomWalk
 {
@@ -31,6 +33,8 @@ public class ClientRandomWalk
   private static final int GENERAL_ANT_ATTACK_HEALTH_DIFF = 3;
   private static final int ATTACK_ANT_ATTACK_HEALTH_DIFF = 3;
   private static final int DEFENSE_ANT_ATTACK_HEALTH_DIFF = 3;
+
+  private static ArrayList<Coordinate> foodLocations = new ArrayList<>();
 
 
 
@@ -170,6 +174,7 @@ public class ClientRandomWalk
 
         if (DEBUG) System.out.println("antworld.client.ClientRandomWalk: chooseActions: " + myNestName);
 
+        findResources(data);
         chooseActionsOfAllAnts(data);  
 
         CommData sendData = data.packageForSendToServer();
@@ -241,7 +246,18 @@ public class ClientRandomWalk
     }
   }
 
-
+  private void findResources(CommData data)
+  {
+    Coordinate foodCoordinate;
+    for(FoodData food : data.foodSet)
+    {
+      foodCoordinate = new Coordinate(food.gridX, food.gridY);
+      if(!foodLocations.contains(foodCoordinate))
+      {
+        foodLocations.add(foodCoordinate);
+      }
+    }
+  }
 
 
   //=============================================================================
@@ -250,33 +266,21 @@ public class ClientRandomWalk
   // Returns true if an action was set. Otherwise returns false
   //=============================================================================
 
-  // Gives the direction of the adjacent food/enemy using coordinate subtraction
-  private Direction getDirection(int xdiff, int ydiff)
-  {
-    if(ydiff == 1)
-    {
-      if(xdiff == 1) return Direction.NORTHEAST;
-      if(xdiff == 0) return Direction.NORTH;
-      if(xdiff == -1) return Direction.NORTHWEST;
-    }
-    if(ydiff == 0)
-    {
-      if(xdiff == 1) return Direction.EAST;
-      if(xdiff == 0) return null;
-      if(xdiff == -1) return Direction.WEST;
-    }
-    if(ydiff == -1)
-    {
-      if(xdiff == 1) return Direction.SOUTHEAST;
-      if(xdiff == 0) return Direction.SOUTH;
-      if(xdiff == -1) return Direction.SOUTHWEST;
-    }
-    return null;
-  }
-  private boolean exitNest(AntData ant, AntAction action)
+  private boolean exitNest(CommData data, AntData ant, AntAction action)
   {
     if (ant.underground)
     {
+      //TODO How much water to heal?
+      //TODO Can ants heal outside if they carry water?
+      if(ant.health != ant.antType.getMaxHealth() && data.foodStockPile[FoodType.WATER.ordinal()] > 0)
+      {
+        action.type = AntActionType.HEAL;
+        return true;
+      }
+      if(ant.carryUnits != 0)
+      {
+
+      }
       action.type = AntActionType.EXIT_NEST;
       action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
       action.y = centerY - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
@@ -313,7 +317,7 @@ public class ClientRandomWalk
                   || enemyType == AntType.SPEED || enemyType == AntType.VISION)
           {
             action.type = AntActionType.ATTACK;
-            action.direction = getDirection(ant.gridX - enemy.gridX, ant.gridY - enemy.gridY);
+            action.direction = Coordinate.getDirection(enemy.gridX - ant.gridX, enemy.gridY - ant.gridY);
             return true;
           }
           else return false;
@@ -322,7 +326,7 @@ public class ClientRandomWalk
         if(antType == AntType.ATTACK || antType == AntType.DEFENCE)
         {
           action.type = AntActionType.ATTACK;
-          action.direction = getDirection(ant.gridX - enemy.gridX, ant.gridY - enemy.gridY);
+          action.direction = Coordinate.getDirection(ant.gridX - enemy.gridX, ant.gridY - enemy.gridY);
           return true;
         }
         break; // don't go through the rest
@@ -337,13 +341,22 @@ public class ClientRandomWalk
     for (FoodData food : data.foodSet)
     {
       foodData = food;
-      // enemy ant has to be next to our ant
-      if(ant.carryType == null)
+      int spaceleft = 0;
+      // ant has no food or the ant has this type of food and space for it
+      if(ant.carryType == null || (food.foodType == ant.carryType && ant.carryUnits < ant.antType.getCarryCapacity()))
       {
         if (Math.abs(ant.gridX - foodData.gridX) <= 1 && Math.abs(ant.gridY - foodData.gridY) <= 1)
         {
           action.type = AntActionType.PICKUP;
-          action.direction = getDirection(ant.gridX - foodData.gridX, ant.gridY - foodData.gridY);
+          action.direction = Coordinate.getDirection(foodData.gridX - ant.gridX, foodData.gridY - ant.gridY);
+
+          // define amount to pickup
+          spaceleft = ant.antType.getCarryCapacity() - ant.carryUnits;
+          if(spaceleft > 0)
+          {
+            if(food.count >= spaceleft) action.quantity = spaceleft;
+            else action.quantity = food.count;
+          }
           return true;
         }
       }
@@ -391,7 +404,7 @@ public class ClientRandomWalk
 
     if (ant.ticksUntilNextAction > 0) return ant.myAction;
 
-    if (exitNest(ant, action)) return action;
+    if (exitNest(data, ant, action)) return action;
 
     if (attackAdjacent(data, ant, action)) return action;
 
