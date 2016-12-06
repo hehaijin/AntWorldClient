@@ -266,21 +266,39 @@ public class ClientRandomWalk
   // Returns true if an action was set. Otherwise returns false
   //=============================================================================
 
+  /**
+   *
+   * Manages the actions of an ant inside the nest
+   * @param data communication data
+   * @param ant ant data
+   * @param action action that the ant will perform (may or may not be set here)
+   * @return
+   */
   private boolean exitNest(CommData data, AntData ant, AntAction action)
   {
     if (ant.underground)
     {
-      //TODO How much water to heal?
-      //TODO Can ants heal outside if they carry water?
       if(ant.health != ant.antType.getMaxHealth() && data.foodStockPile[FoodType.WATER.ordinal()] > 0)
       {
         action.type = AntActionType.HEAL;
+        if(ant.antType.getMaxHealth()-ant.health < data.foodStockPile[FoodType.WATER.ordinal()])
+        {
+          action.quantity = ant.health;
+        }
+        // not enough water to heal completely
+        else
+        {
+          action.quantity = data.foodStockPile[FoodType.WATER.ordinal()];
+        }
         return true;
       }
       if(ant.carryUnits != 0)
       {
-
+        action.type = AntActionType.DROP;
+        action.quantity = ant.carryUnits;
+        return true;
       }
+      // if it has finished all the things above, it is will come out
       action.type = AntActionType.EXIT_NEST;
       action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
       action.y = centerY - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
