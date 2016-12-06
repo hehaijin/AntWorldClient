@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Random;
 
 import antworld.common.*;
@@ -35,8 +36,9 @@ public class ClientRandomWalk
   private static final int DEFENSE_ANT_ATTACK_HEALTH_DIFF = 3;
 
   private static ArrayList<Coordinate> foodLocations = new ArrayList<>();
-
-
+  // TODO need to work on recording water location data (pre-calculate)
+  private static ArrayList<Coordinate> waterLocations = new ArrayList<>();
+  private static HashSet<FoodType> desiredFood = new HashSet<>();
 
   //A random number generator is created in Constants. Use it.
   //Do not create a new generator every time you want a random number nor
@@ -251,10 +253,13 @@ public class ClientRandomWalk
     Coordinate foodCoordinate;
     for(FoodData food : data.foodSet)
     {
-      foodCoordinate = new Coordinate(food.gridX, food.gridY);
-      if(!foodLocations.contains(foodCoordinate))
+      if(food.foodType != FoodType.WATER)
       {
-        foodLocations.add(foodCoordinate);
+        foodCoordinate = new Coordinate(food.gridX, food.gridY);
+        if (!foodLocations.contains(foodCoordinate))
+        {
+          foodLocations.add(foodCoordinate);
+        }
       }
     }
   }
@@ -353,6 +358,8 @@ public class ClientRandomWalk
     return false;
   }
 
+  // TODO might need a special flag to know if this ant is looking for food
+  // TODO this might cause problems for medic ant
   private boolean pickUpFoodAdjacent(CommData data, AntData ant, AntAction action)
   {
     FoodData foodData;
@@ -360,22 +367,25 @@ public class ClientRandomWalk
     {
       foodData = food;
       int spaceleft = 0;
-      // ant has no food or the ant has this type of food and space for it
-      if(ant.carryType == null || (food.foodType == ant.carryType && ant.carryUnits < ant.antType.getCarryCapacity()))
+      if(food.foodType != FoodType.WATER)
       {
-        if (Math.abs(ant.gridX - foodData.gridX) <= 1 && Math.abs(ant.gridY - foodData.gridY) <= 1)
+        // ant has no food or the ant has this type of food and space for it
+        if (ant.carryType == null || (food.foodType == ant.carryType && ant.carryUnits < ant.antType.getCarryCapacity()))
         {
-          action.type = AntActionType.PICKUP;
-          action.direction = Coordinate.getDirection(foodData.gridX - ant.gridX, foodData.gridY - ant.gridY);
-
-          // define amount to pickup
-          spaceleft = ant.antType.getCarryCapacity() - ant.carryUnits;
-          if(spaceleft > 0)
+          if (Math.abs(ant.gridX - foodData.gridX) <= 1 && Math.abs(ant.gridY - foodData.gridY) <= 1)
           {
-            if(food.count >= spaceleft) action.quantity = spaceleft;
-            else action.quantity = food.count;
+            action.type = AntActionType.PICKUP;
+            action.direction = Coordinate.getDirection(foodData.gridX - ant.gridX, foodData.gridY - ant.gridY);
+
+            // define amount to pickup
+            spaceleft = ant.antType.getCarryCapacity() - ant.carryUnits;
+            if (spaceleft > 0)
+            {
+              if (food.count >= spaceleft) action.quantity = spaceleft;
+              else action.quantity = food.count;
+            }
+            return true;
           }
-          return true;
         }
       }
     }
@@ -387,8 +397,41 @@ public class ClientRandomWalk
     return false;
   }
 
+  /**
+   * @param data
+   * @param ant
+   * @param action
+   * @return
+   */
   private boolean pickUpWater(CommData data, AntData ant, AntAction action)
   {
+    FoodData foodData;
+    for (FoodData food : data.foodSet)
+    {
+      foodData = food;
+      int spaceleft = 0;
+      if(food.foodType == FoodType.WATER)
+      {
+        // ant has no water or the ant is carrying water and space for it
+        if (ant.carryType == null || (FoodType.WATER == ant.carryType && ant.carryUnits < ant.antType.getCarryCapacity()))
+        {
+          if (Math.abs(ant.gridX - foodData.gridX) <= 1 && Math.abs(ant.gridY - foodData.gridY) <= 1)
+          {
+            action.type = AntActionType.PICKUP;
+            action.direction = Coordinate.getDirection(foodData.gridX - ant.gridX, foodData.gridY - ant.gridY);
+
+            // define amount to pickup
+            spaceleft = ant.antType.getCarryCapacity() - ant.carryUnits;
+            if (spaceleft > 0)
+            {
+              if (food.count >= spaceleft) action.quantity = spaceleft;
+              else action.quantity = food.count;
+            }
+            return true;
+          }
+        }
+      }
+    }
     return false;
   }
 
