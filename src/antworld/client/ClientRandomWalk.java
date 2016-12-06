@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -39,6 +40,20 @@ public class ClientRandomWalk
   // TODO need to work on recording water location data (pre-calculate)
   private static ArrayList<Coordinate> waterLocations = new ArrayList<>();
   private static HashSet<FoodType> desiredFood = new HashSet<>();
+  
+  
+  
+  
+  private HashMap<AntData,Path> allpaths=new HashMap<>(); // for storing shortest path.
+  private HashMap<AntData,AntAction> allactions=new HashMap<>(); //used to check if current action is successful
+  
+  
+  
+
+  
+  
+  
+  
 
   //A random number generator is created in Constants. Use it.
   //Do not create a new generator every time you want a random number nor
@@ -442,6 +457,8 @@ public class ClientRandomWalk
 
   private boolean goToFood(CommData data, AntData ant, AntAction action)
   {
+    
+    
     return false;
   }
 
