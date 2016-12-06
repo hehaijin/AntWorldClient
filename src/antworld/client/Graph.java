@@ -9,19 +9,17 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 
 import javax.imageio.ImageIO;
+
+import antworld.common.AntType;
 import antworld.common.LandType;
-
-
 
 /**
  * 
- * the graph representing the whole map.
- * includes private Node class as graph node.
- * use findPath() function to find the shortest path between 2 nodes
- * by A star.
- * returns a Path object which is a wrapper on an Liskinedlist.
- * use getNext() to get next step in the path.
- */ 
+ * the graph representing the whole map. includes private Node class as graph
+ * node. use findPath() function to find the shortest path between 2 nodes by A
+ * star. returns a Path object which is a wrapper on an Liskinedlist. use
+ * getNext() to get next step in the path.
+ */
 
 public class Graph
 {
@@ -30,15 +28,15 @@ public class Graph
     int x, y;
     int height;
     LandType landtype;
-   
-    int[] connections = new int[9];  // for the edges.
-    
+
+    int[] connections = new int[9]; // for the edges.
 
     int cost_so_far; // cost from the source so far.
     int cost_estimate; // estimation for remaining cost to reach the
                        // destination.
     Node pre; // a pointer to previous Node in the path.
-    int color; // color indicating the node is visited or not.
+    int color; // color indicating the node is visited or not. 1 for not
+               // visited. -1 for processed. 0 for in the frontier.
 
     public Node(LandType landtype, int height, int x, int y)
     {
@@ -49,32 +47,8 @@ public class Graph
 
     }
   }
-  
-  private class Path
-  {
-    private LinkedList<Node> path=new LinkedList<>();
-    
-    Node getNext()
-    {
-      return path.pop();
-    }
-    
-    /**
-     * add to the path in reverse sequence.
-     * @param node
-     */
-    void add(Node node)
-    {
-      path.push(node);
-    }
-     
-    int size()
-    {
-      return path.size();
-    }
-  }
-  
-  
+
+ 
 
   int worldWidth = 5000;
   int worldHeight = 2500;
@@ -91,12 +65,12 @@ public class Graph
       System.out.println("image load failure");
     }
     System.out.println("loading the picture done");
-    
+
     for (int x = 0; x < worldWidth; x++)
-    {System.out.println(x);
+    {
       for (int y = 0; y < worldHeight; y++)
       {
-        
+
         int rgb = (image.getRGB(x, y) & 0x00FFFFFF);
         LandType landType;
         int height = 0;
@@ -120,23 +94,20 @@ public class Graph
         world[x][y] = new Node(landType, height, x, y);
       }
     }
-    
-    
-    
+
     System.out.println("now calculating edges");
     calculateEdges();
   }
-  
+
   public Node getNode(int x, int y)
   {
-    if(x<0 || x>=5000 || y<0 || y>2500)
+    if (x < 0 || x >= 5000 || y < 0 || y > 2500)
     {
       System.out.println("wrong input for node coordinates");
       return null;
-    }
-    else return world[x][y];
+    } else
+      return world[x][y];
   }
-  
 
   public void calculateEdges()
   {
@@ -149,13 +120,16 @@ public class Graph
         {
           for (int i = 0; i < 9; i++)
           {
-            int m=i/3-1;
-            int n=i%3-1;
-            if(world[x+m][y+n].landtype==LandType.GRASS && i!=4)
+            int m = i / 3 - 1;
+            int n = i % 3 - 1;
+            if (world[x + m][y + n].landtype == LandType.GRASS && i != 4)
             {
-              world[x][y].connections[i]=1;
+              world[x][y].connections[i] = 1;
             }
-            
+            if(world[x+m][y+n].height-world[x][y].height>0)
+            {
+              world[x][y].connections[i]*= 5;// to account for uphill movement.
+            }
           }
         }
 
@@ -164,8 +138,23 @@ public class Graph
   }
 
   public Path findPath(Node start, Node end)
-  { 
-    long t1=System.currentTimeMillis();
+  {
+    long t1 = System.currentTimeMillis();
+    int s = 0;
+    int t = 0;
+
+    for (int i = 0; i < 9; i++)
+    {
+      if (start.connections[i] > 0)
+        s++;
+      if (end.connections[i] > 0)
+        t++;
+
+    }
+    if (s == 0)
+      System.out.println("no path from start");
+    if (t == 0)
+      System.out.println("no path to end");
 
     initiateGraph();
     start.color = 0;
@@ -183,65 +172,56 @@ public class Graph
     });
 
     frontier.offer(start);
-    
+
     System.out.println("start calculating path");
- loop:
-   while (frontier.size() > 0)
-    { 
+    loop: while (frontier.size() > 0)
+    {
       Node u = frontier.poll();
-    
-      for (int i = 0; i <9; i++)
+
+      for (int i = 0; i < 9; i++)
       {
-        
 
-          if (u.connections[i] > 0)
+        if (u.connections[i] > 0)
+        {
+          int m = i / 3 - 1;
+          int n = i % 3 - 1;
+
+          Node v = world[u.x + m][u.y + n];
+          if (v.color == 1)
           {
-            int m=i/3-1;
-            int n=i%3-1;
-            
-            
-            Node v = world[u.x + m][u.y + n];
-            if (v.color == 1)
+            v.color = 0;
+            if (v.cost_so_far > u.cost_so_far + u.connections[i])
             {
-              v.color = 0;
-              if (v.cost_so_far > u.cost_so_far + u.connections[i])
-              {
-                v.cost_so_far = u.cost_so_far + u.connections[i];
-                v.cost_estimate = v.cost_so_far + costestimate(v, end);
-              }
-              v.pre = u;
-              frontier.offer(v);
-             // System.out.println("adding Node "+v.x+ " "+ v.y+ " to the frountier");
+              v.cost_so_far = u.cost_so_far + u.connections[i];
+              v.cost_estimate = v.cost_so_far + costestimate(v, end);
             }
-            if (v == end)
-             break loop;
+            v.pre = u;
+            frontier.offer(v);
+            // System.out.println("adding Node "+v.x+ " "+ v.y+ " to the
+            // frountier");
           }
-
+          if (v == end)
+            break loop;
         }
-      
+
+      }
 
     }
-    
-   
-   //adding nodes to the path  
-   Path path=new Path();
-   path.add(end);
-   Node p=end;
-   while(p.pre !=null)
-   {
-     path.add(p.pre);
-     p=p.pre;
-     
-   }
-   System.out.println("finding the path takes "+ (System.currentTimeMillis()-t1 )+ "ms");
-   return path; 
-  
+
+    // adding nodes to the path
+    Path path = new Path();
+    path.add(new Coordinate(end.x, end.y));
+    Node p = end;
+    while (p.pre != null)
+    {
+      path.add(new Coordinate(p.pre.x, p.pre.y));
+      p = p.pre;
+
+    }
+    System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
+    return path;
 
   }
-  
-  
-  
-  
 
   public void initiateGraph()
   {
@@ -271,9 +251,8 @@ public class Graph
   {
     // TODO Auto-generated method stub
     Graph g = new Graph();
-    System.out.println("test");   
-    System.out.println(g.findPath(g.getNode(600,600),g.getNode(1700, 1700)).size());
-   
+    System.out.println(g.findPath(g.getNode(300, 300), g.getNode(800, 900)).size());
+
   }
 
 }
