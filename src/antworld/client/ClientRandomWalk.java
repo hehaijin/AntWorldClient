@@ -30,10 +30,15 @@ public class ClientRandomWalk
 
   private static ArrayList<Coordinate> foodLocations = new ArrayList<>();
 
-  // TODO need to work on recording water location data (pre-calculate)
+  // TODO read in file and write here
   private ArrayList<Coordinate> waterLocations = new ArrayList<>(); // stores some water locations
-  private HashMap<Integer,FoodType> desiredFood = new HashMap<>(); // stores the desired food of the ant.
 
+  // TODO hashmaps are unsynchronized by nature, it's possible they need to be synchronized
+  private HashMap<Integer,FoodType> desiredFood = new HashMap<>(); // stores the desired food of the ant.
+  private HashMap<Integer, Boolean> attacked = new HashMap<Integer, Boolean>();
+
+  private ArrayList<Path> foodPath = new ArrayList<>(); // stores paths to food from colony
+  private ArrayList<Path> waterPath = new ArrayList<>(); // stores paths to water from colony
   private HashMap<Integer,Path> allpaths=new HashMap<>(); // for storing shortest path.
   private HashMap<Integer,AntAction> allactions=new HashMap<>(); //used to check if current action is successful
   
@@ -217,7 +222,7 @@ public class ClientRandomWalk
   
   private boolean sendCommData(CommData data)
   {
-    
+
     CommData sendData = data.packageForSendToServer();
     try
     {
@@ -321,43 +326,74 @@ public class ClientRandomWalk
    */
   private boolean attackAdjacent(CommData data, AntData ant, AntAction action)
   {
+    // use these values often and makes code more readable
     AntType antType = ant.antType;
     AntType enemyType;
+    boolean weakAnt;
+    boolean enemyAdjacent; // true if the ant is adjacent, don't want to do the math twice
+    boolean enemyWeakAnt;
+    boolean hasAdvantage; // true if more health
+
     for(AntData enemy : data.enemyAntSet)
     {
       enemyType = enemy.antType;
-      // enemy ant has to be next to our ant
-      if(Math.abs(ant.gridX - enemy.gridX) <= 1 && Math.abs(ant.gridY - enemy.gridY) <= 1)
+      enemyAdjacent = false;
+      enemyWeakAnt = true;
+      weakAnt = true;
+      hasAdvantage = false;
+
+      if(ant.health > enemy.health) hasAdvantage = true;
+      if (Math.abs(ant.gridX - enemy.gridX) <= 1 && Math.abs(ant.gridY - enemy.gridY) <= 1) enemyAdjacent = true;
+      if(antType == AntType.ATTACK || antType == AntType.DEFENCE) weakAnt = false;
+      if(enemyType == AntType.ATTACK || enemyType == AntType.DEFENCE) enemyWeakAnt = false;
+
+      if (AIconstants.aggresive)
       {
-        // if this is the current ant
-        if(antType == AntType.WORKER || antType == AntType.MEDIC
-                || antType == AntType.SPEED || antType == AntType.VISION)
+        // enemy ant has to be next to our ant
+        if (enemyAdjacent)
         {
-          // if the enemy is one of these then attack
-          if(enemyType == AntType.WORKER || enemyType == AntType.MEDIC
-                  || enemyType == AntType.SPEED || enemyType == AntType.VISION)
+          // if both ants are of the same level
+          if (weakAnt)
+          {
+            if (enemyWeakAnt && hasAdvantage)
+            {
+              action.type = AntActionType.ATTACK;
+              action.direction = Coordinate.getDirection(enemy.gridX - ant.gridX, enemy.gridY - ant.gridY);
+              return true;
+            } else return false;
+          }
+          // if the ant is attack or defense, attack enemy regardless of type
+          if (!weakAnt && hasAdvantage)
           {
             action.type = AntActionType.ATTACK;
-            action.direction = Coordinate.getDirection(enemy.gridX - ant.gridX, enemy.gridY - ant.gridY);
+            action.direction = Coordinate.getDirection(ant.gridX - enemy.gridX, ant.gridY - enemy.gridY);
             return true;
           }
-          else return false;
+          break; // don't go through the rest
         }
-        // if the ant is attack or defense attack enemy regardless of type
-        if(antType == AntType.ATTACK || antType == AntType.DEFENCE)
+      }
+      else // not aggresive but will defend
+      {
+        // ant attacked one of our ants
+        if(enemy.myAction.type == AntActionType.ATTACK &&
+                enemy.myAction.x == ant.gridX && enemy.myAction.y == ant.gridY)
         {
-          action.type = AntActionType.ATTACK;
-          action.direction = Coordinate.getDirection(ant.gridX - enemy.gridX, ant.gridY - enemy.gridY);
-          return true;
+          attacked.replace(ant.id, true);
+          // defend itself if it has an advantage
+          if (!weakAnt && hasAdvantage)
+          {
+            action.type = AntActionType.ATTACK;
+            action.direction = Coordinate.getDirection(ant.gridX - enemy.gridX, ant.gridY - enemy.gridY);
+            return true;
+          }
         }
-        break; // don't go through the rest
+        attacked.replace(ant.id, false);
       }
     }
     return false;
   }
 
   // TODO might need a special flag to know if this ant is looking for food
-  // TODO this might cause problems for medic ant
   private boolean pickUpFoodAdjacent(CommData data, AntData ant, AntAction action)
   {
     FoodData foodData;
@@ -365,7 +401,8 @@ public class ClientRandomWalk
     {
       foodData = food;
       int spaceleft = 0;
-      if(food.foodType != FoodType.WATER)
+      // dont want to pick up water and a medic should only have water to be useful
+      if(food.foodType != FoodType.WATER && ant.antType != AntType.MEDIC)
       {
         // ant has no food or the ant has this type of food and space for it
         if (ant.carryType == null || (food.foodType == ant.carryType && ant.carryUnits < ant.antType.getCarryCapacity()))
@@ -390,8 +427,28 @@ public class ClientRandomWalk
     return false;
   }
 
+  /*
+   this method should define make ant go home if attacked it comes after the attack adjacent method,
+   so assume that it is not advantageous to attack if it reached this point, perhaps have an array
+   keeping track of attacks
+    */
   private boolean goHomeIfCarryingOrHurt(CommData data, AntData ant, AntAction action)
   {
+    if(attacked.get(ant.id))
+    {
+      // go home
+      return true;
+    }
+    if(ant.health < ant.antType.getMaxHealth()/2)
+    {
+      // go home
+      return true;
+    }
+    if(ant.carryType != null)
+    {
+      // go home
+      return true;
+    }
     return false;
   }
 

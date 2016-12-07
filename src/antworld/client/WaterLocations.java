@@ -79,7 +79,7 @@ public class WaterLocations
 
   private void write()
   {
-    java.nio.file.Path out = Paths.get("test.txt");
+    java.nio.file.Path out = Paths.get("waterLocations.txt");
     try {
       OutputStream write = Files.newOutputStream(out);
       this.writer = new BufferedWriter(new OutputStreamWriter(write));
@@ -101,6 +101,13 @@ public class WaterLocations
         System.out.println(e);
         System.exit(-1);
       }
+    }
+    // write end of file
+    try{
+      writer.write(-1);
+    } catch (IOException e)
+    {
+      System.out.println(e);
     }
   }
 
