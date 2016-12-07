@@ -1,15 +1,16 @@
 package antworld.client;
 
+import antworld.common.Direction;
+
 import java.util.LinkedList;
 
 
 
 public class Path
 {
+  private LinkedList<Direction> path = new LinkedList<>();
 
-  private LinkedList<Coordinate> path = new LinkedList<>();
-
-  Coordinate getNext()
+  Direction getNext()
   {
     return path.pop();
   }
@@ -19,7 +20,7 @@ public class Path
    * 
    * @param node
    */
-  void add(Coordinate node)
+  void add(Direction node)
   {
     path.push(node);
   }
