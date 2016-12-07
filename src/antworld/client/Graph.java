@@ -210,13 +210,14 @@ public class Graph
 
     // adding nodes to the path
     Path path = new Path();
-    path.add(new Coordinate(end.x, end.y));
     Node p = end;
+    Node pre = end.pre;
+    path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
     while (p.pre != null)
     {
-      path.add(new Coordinate(p.pre.x, p.pre.y));
-      p = p.pre;
-
+      p = pre;
+      pre = p.pre;
+      path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
     }
     System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
     return path;
