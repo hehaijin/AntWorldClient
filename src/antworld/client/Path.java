@@ -1,10 +1,7 @@
 package antworld.client;
 
 import antworld.common.Direction;
-
 import java.util.LinkedList;
-
-
 
 public class Path
 {
@@ -28,5 +25,11 @@ public class Path
   int size()
   {
     return path.size();
+  }
+
+  // TODO do you want this?
+  public static void main(String[] args)
+  {
+    // TODO Auto-generated method stub
   }
 }

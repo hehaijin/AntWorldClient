@@ -28,31 +28,14 @@ public class ClientRandomWalk
 
   private Socket clientSocket;
 
-  /* I was thinking putting paramaters that the ants use to make decisions here
-   * For example, one paramater I was thinking is enemy health. Depending of the health of the enemy
-   * the ant can decide to attack or flee */
-
-  private static final int GENERAL_ANT_ATTACK_HEALTH_DIFF = 3;
-  private static final int ATTACK_ANT_ATTACK_HEALTH_DIFF = 3;
-  private static final int DEFENSE_ANT_ATTACK_HEALTH_DIFF = 3;
-
   private static ArrayList<Coordinate> foodLocations = new ArrayList<>();
-  // TODO need to work on recording water location data (pre-calculate)
-  private static ArrayList<Coordinate> waterLocations = new ArrayList<>();
-  private static HashSet<FoodType> desiredFood = new HashSet<>();
-  
-  
-  
-  
-  private HashMap<AntData,Path> allpaths=new HashMap<>(); // for storing shortest path.
-  private HashMap<AntData,AntAction> allactions=new HashMap<>(); //used to check if current action is successful
-  
-  
-  
 
-  
-  
-  
+  // TODO need to work on recording water location data (pre-calculate)
+  private ArrayList<Coordinate> waterLocations = new ArrayList<>(); // stores some water locations
+  private HashMap<Integer,FoodType> desiredFood = new HashMap<>(); // stores the desired food of the ant.
+
+  private HashMap<Integer,Path> allpaths=new HashMap<>(); // for storing shortest path.
+  private HashMap<Integer,AntAction> allactions=new HashMap<>(); //used to check if current action is successful
   
 
   //A random number generator is created in Constants. Use it.

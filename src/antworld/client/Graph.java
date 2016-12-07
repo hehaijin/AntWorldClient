@@ -48,8 +48,6 @@ public class Graph
     }
   }
 
- 
-
   int worldWidth = 5000;
   int worldHeight = 2500;
   Node[][] world = new Node[worldWidth][worldHeight];
