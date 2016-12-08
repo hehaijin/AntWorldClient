@@ -166,7 +166,6 @@ public class Graph
         // TODO Auto-generated method stub
         return o1.cost_so_far + o1.cost_estimate - o2.cost_so_far - o2.cost_estimate;
       }
-
     });
 
     frontier.offer(start);

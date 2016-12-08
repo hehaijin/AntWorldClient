@@ -25,6 +25,8 @@ public class ClientRandomWalk
   private boolean isConnected = false;
   private NestNameEnum myNestName = null;
   private int centerX, centerY;
+  private SemiRandomWalk walk;
+  private boolean firstRun = false;
 
   private Socket clientSocket;
 
@@ -35,7 +37,7 @@ public class ClientRandomWalk
 
   // TODO hashmaps are unsynchronized by nature, it's possible they need to be synchronized
   private HashMap<Integer,FoodType> desiredFood = new HashMap<>(); // stores the desired food of the ant.
-  private HashMap<Integer, Boolean> attacked = new HashMap<Integer, Boolean>();
+  private HashMap<Integer, Boolean> attacked = new HashMap<>();
 
   private ArrayList<Path> foodPath = new ArrayList<>(); // stores paths to food from colony
   private ArrayList<Path> waterPath = new ArrayList<>(); // stores paths to water from colony
@@ -47,7 +49,7 @@ public class ClientRandomWalk
   //Do not create a new generator every time you want a random number nor
   //  even in every class were you want a generator.
   //
-  private static Random random = Constants.random;
+  public static Random random = Constants.random;
 
 
   public ClientRandomWalk(String host, int portNumber, TeamNameEnum team)
@@ -59,6 +61,7 @@ public class ClientRandomWalk
     isConnected = openConnection(host, portNumber);
     if (!isConnected) System.exit(0);
     CommData data = obtainNest();
+    walk = new SemiRandomWalk(data, myNestName);
     mainGameLoop(data);
     closeAll();
   }
@@ -261,7 +264,10 @@ public class ClientRandomWalk
         foodCoordinate = new Coordinate(food.gridX, food.gridY);
         if (!foodLocations.contains(foodCoordinate))
         {
+          System.out.println("Food found");
           foodLocations.add(foodCoordinate);
+          System.out.println("Generating Path");
+          // generate path to food from colony
         }
       }
     }
@@ -434,6 +440,7 @@ public class ClientRandomWalk
     */
   private boolean goHomeIfCarryingOrHurt(CommData data, AntData ant, AntAction action)
   {
+    // TODO might need shortest path here, if carrying there should be a path already, if hurt might need to generate one
     if(attacked.get(ant.id))
     {
       // go home
@@ -492,13 +499,12 @@ public class ClientRandomWalk
 
   private boolean goToEnemyAnt(CommData data, AntData ant, AntAction action)
   {
+    // if not aggressive
     return false;
   }
 
   private boolean goToFood(CommData data, AntData ant, AntAction action)
   {
-    
-    
     return false;
   }
 
@@ -507,9 +513,17 @@ public class ClientRandomWalk
     return false;
   }
 
+  /**
+   * Primitive exploration algorithm. Uses a semi random walk which uses a normal distribution of directions.
+   * TODO logic for when obstacle is encountered. 
+   * @param data
+   * @param ant
+   * @param action
+   * @return
+   */
   private boolean goExplore(CommData data, AntData ant, AntAction action)
   {
-    Direction dir = Direction.getRandomDir();
+    Direction dir = walk.getDirection(ant);
     action.type = AntActionType.MOVE;
     action.direction = dir;
     return true;
