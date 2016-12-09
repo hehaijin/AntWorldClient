@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * This class creates normal distributions for moving in a semi-random direction
+ * This class creates normal distributions for moving in a semi-random direction.
  * Created by Hector on 12/7/16.
  */
 public class SemiRandomWalk
@@ -44,8 +44,6 @@ public class SemiRandomWalk
     distributions.put(Direction.NORTHWEST, northwest);
     distributions.put(Direction.SOUTHEAST, southeast);
     distributions.put(Direction.SOUTHWEST, southwest);
-
-    determineDirection(data, nestName);
   }
 
   /**
@@ -73,47 +71,49 @@ public class SemiRandomWalk
   /**
    * Determine general direction the ants will go based on position relative to nest
    * @param data
-   * @param nestName
    */
-  public void determineDirection(CommData data, NestNameEnum nestName)
+  public void determineDirection(CommData data, AntData ant, int x, int y, int nestx, int nesty)
   {
-    for(AntData ant : data.myAntList)
-    {
-      int xdiff = ant.gridX - data.nestData[nestName.ordinal()].centerX;
-      int ydiff = ant.gridY - data.nestData[nestName.ordinal()].centerY;
+      int xdiff = x - nestx;
+      int ydiff = y - nesty;
 
-      if (xdiff == 0) xdiff = 1;
-
+      if (ydiff == 0) ydiff = 1;
       double slope = xdiff / ydiff;
 
-      if (xdiff > 0 && ydiff > 0)
+      if (xdiff >= 0 && ydiff > 0)
       {
-        if (slope <= .4) direction.put(ant.id, Direction.EAST);
-        if (slope <= 2.4 && slope > .4) direction.put(ant.id, Direction.SOUTHEAST);
-        if (slope > 2.4) direction.put(ant.id, Direction.SOUTH);
+        if (slope <= .4) {direction.put(ant.id, Direction.EAST); return;}
+        if (slope <= 2.4 && slope > .4) {direction.put(ant.id, Direction.SOUTHEAST); return;}
+        if (slope > 2.4) {direction.put(ant.id, Direction.SOUTH); return;}
       }
 
-      if (xdiff > 0 && ydiff < 0)
+      if (xdiff >= 0 && ydiff < 0)
       {
-        if (slope >= -.4) direction.put(ant.id, Direction.EAST);
-        if (slope >= -2.4 && slope < -.4) direction.put(ant.id, Direction.NORTHEAST);
-        if (slope < -2.4) direction.put(ant.id, Direction.NORTH);
+        if (slope >= -.4) {direction.put(ant.id, Direction.EAST); return;}
+        if (slope >= -2.4 && slope < -.4) {direction.put(ant.id, Direction.NORTHEAST); return;}
+        if (slope < -2.4) {direction.put(ant.id, Direction.NORTH); return;}
       }
 
-      if (xdiff < 0 && ydiff > 0)
+      if (xdiff <= 0 && ydiff > 0)
       {
-        if (slope >= -.4) direction.put(ant.id, Direction.WEST);
-        if (slope >= -2.4 && slope < -.4) direction.put(ant.id, Direction.SOUTHWEST);
-        if (slope < -2.4) direction.put(ant.id, Direction.SOUTH);
+        if (slope >= -.4) {direction.put(ant.id, Direction.WEST); return;}
+        if (slope >= -2.4 && slope < -.4) {direction.put(ant.id, Direction.SOUTHWEST); return;}
+        if (slope < -2.4) {direction.put(ant.id, Direction.SOUTH); return;}
       }
 
-      if (xdiff < 0 && ydiff < 0)
+      if (xdiff <= 0 && ydiff < 0)
       {
-        if (slope <= .4) direction.put(ant.id, Direction.WEST);
-        if (slope <= 2.4 && slope > .4) direction.put(ant.id, Direction.NORTHWEST);
-        if (slope > 2.4) direction.put(ant.id, Direction.NORTH);
+        if (slope <= .4) {direction.put(ant.id, Direction.WEST); return;}
+        if (slope <= 2.4 && slope > .4) {direction.put(ant.id, Direction.NORTHWEST); return;}
+        if (slope > 2.4) {direction.put(ant.id, Direction.NORTH); return;}
       }
-    }
+      System.out.println("Didn't choose. SLOPE: " + slope + " x: " + xdiff + " y: " + ydiff);
+  }
+
+  public void normalDirectionChange(AntData ant)
+  {
+    Direction newDir = distributions.get(direction.get(ant.id)).get(Constants.random.nextInt(50));
+    direction.replace(ant.id, newDir);
   }
 
   /**
@@ -123,6 +123,6 @@ public class SemiRandomWalk
    */
   public Direction getDirection(AntData ant)
   {
-    return distributions.get(direction.get(ant.id)).get(ClientRandomWalk.random.nextInt(50));
+    return distributions.get(direction.get(ant.id)).get(Constants.random.nextInt(50));
   }
 }
