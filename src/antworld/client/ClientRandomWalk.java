@@ -44,6 +44,8 @@ public class ClientRandomWalk
   private HashMap<Integer,Path> allpaths=new HashMap<>(); // for storing shortest path.
   private HashMap<Integer,AntAction> allactions=new HashMap<>(); //used to check if current action is successful
   private HashMap<Integer,Task> alltasks=new HashMap<>();
+  
+  private CommData previousData;
 
   //A random number generator is created in Constants. Use it.
   //Do not create a new generator every time you want a random number nor
@@ -183,6 +185,8 @@ public class ClientRandomWalk
         if (DEBUG) System.out.println("antworld.client.ClientRandomWalk: chooseActions: " + myNestName);
 
         findResources(data);
+        
+        
         chooseActionsOfAllAnts(data);  
 
         CommData sendData = data.packageForSendToServer();
@@ -204,6 +208,10 @@ public class ClientRandomWalk
         {
           System.err.println("antworld.client.ClientRandomWalk: !!!!ERROR!!!! " + myNestName);
         }
+        
+        
+        previousData=data;//update previousData
+        
       }
       catch (IOException e)
       {
@@ -220,6 +228,8 @@ public class ClientRandomWalk
       }
 
     }
+    
+   
   }
   
   
@@ -584,6 +594,30 @@ public class ClientRandomWalk
     return action;
   }
 
+  
+  
+  private ArrayList<Coordinate> newFoundFoodSite(CommData data)
+  {
+    ArrayList<Coordinate> newfoodsite=new ArrayList<>();
+    HashSet<FoodData> fdnew=data.foodSet;
+    HashSet<FoodData> fdold=previousData.foodSet;
+    for(FoodData fd: fdnew)
+    {
+      if(!fdold.contains(fd))
+      {
+        newfoodsite.add(new Coordinate(fd.gridX, fd.gridY));
+      }
+      
+    }
+ 
+    return newfoodsite;
+  }
+  
+  
+  
+  
+  
+  
   /**
    * The last argument is taken as the host name.
    * The default host is localhost.
