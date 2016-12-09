@@ -1,0 +1,15 @@
+The strategy for ant behavior:
+1, global dispatcher dispatches tasks at the beginning of the gameloop, then individual ant carry out task.
+2, local information.
+1.	For each food location, the ants that is associated with it.
+2.	For each ant, the task it is doing.
+3.	For each ant, the path if will go. 
+4.	For each ant, the food location it is associated. (redundant with 1, remember to update both)
+5.	For each ant, it¡¯s being attacked.
+3, the global dispatcher:
+1.	Check if any ant is under attack, correspond.  Or check if you want to attack some ant. Ant fleeing home may be considered not associated with any food site.
+2.	Check if any food location requires more labor, and if you have ant in nest, or free exploring ant, dispatch it there.
+3.	Collision detection.
+4, the individual ant.
+1.	check if last move is carried out. If not, repeat, or do something.
+2.	send out next move based on it¡¯s task.

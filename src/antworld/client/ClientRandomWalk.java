@@ -44,7 +44,9 @@ public class ClientRandomWalk
   private ArrayList<Path> waterPath = new ArrayList<>(); // stores paths to water from colony
   private HashMap<Integer,Path> allpaths=new HashMap<>(); // for storing shortest path.
   private HashMap<Integer,AntAction> allactions=new HashMap<>(); //used to check if current action is successful
-  
+  private HashMap<Integer,Task> alltasks=new HashMap<>();
+
+  private CommData previousData;
 
   //A random number generator is created in Constants. Use it.
   //Do not create a new generator every time you want a random number nor
@@ -206,6 +208,10 @@ public class ClientRandomWalk
         {
           System.err.println("antworld.client.ClientRandomWalk: !!!!ERROR!!!! " + myNestName);
         }
+
+
+        previousData=data;//update previousData
+
       }
       catch (IOException e)
       {
@@ -222,6 +228,8 @@ public class ClientRandomWalk
       }
 
     }
+
+
   }
   
   
@@ -528,16 +536,43 @@ public class ClientRandomWalk
   private boolean goToEnemyAnt(CommData data, AntData ant, AntAction action)
   {
     // if not aggressive
+    if(alltasks.get(ant.id)==Task.GOTOENIMYANT)
+    {
+      Direction d=allpaths.get(ant.id).getNext();
+      action.direction=d;
+      action.type=AntActionType.MOVE;
+      return true;
+    }
+
+
     return false;
   }
 
   private boolean goToFood(CommData data, AntData ant, AntAction action)
   {
+    if(alltasks.get(ant.id)==Task.GOTOFOOD)
+    {
+      Direction d=allpaths.get(ant.id).getNext();
+      action.direction=d;
+      action.type=AntActionType.MOVE;
+      return true;
+    }
+
     return false;
   }
 
   private boolean goToGoodAnt(CommData data, AntData ant, AntAction action)
   {
+    if(alltasks.get(ant.id)==Task.GOTOGOODANT)
+    {
+      Direction d=allpaths.get(ant.id).getNext();
+      action.direction=d;
+      action.type=AntActionType.MOVE;
+      return true;
+    }
+
+
+
     return false;
   }
 
@@ -593,6 +628,30 @@ public class ClientRandomWalk
 
     return action;
   }
+
+
+
+  private ArrayList<Coordinate> newFoundFoodSite(CommData data)
+  {
+    ArrayList<Coordinate> newfoodsite=new ArrayList<>();
+    HashSet<FoodData> fdnew=data.foodSet;
+    HashSet<FoodData> fdold=previousData.foodSet;
+    for(FoodData fd: fdnew)
+    {
+      if(!fdold.contains(fd))
+      {
+        newfoodsite.add(new Coordinate(fd.gridX, fd.gridY));
+      }
+
+    }
+
+    return newfoodsite;
+  }
+
+
+
+
+
 
   /**
    * The last argument is taken as the host name.
