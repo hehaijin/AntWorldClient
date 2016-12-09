@@ -26,7 +26,8 @@ public class ClientRandomWalk
   private NestNameEnum myNestName = null;
   private int centerX, centerY;
   private SemiRandomWalk walk;
-  private boolean firstRun = false;
+  private boolean firstRun = true;
+  private int changeDir = 0;
 
   private Socket clientSocket;
 
@@ -182,8 +183,9 @@ public class ClientRandomWalk
 
         if (DEBUG) System.out.println("antworld.client.ClientRandomWalk: chooseActions: " + myNestName);
 
+        //checkCollisions(data);
         findResources(data);
-        chooseActionsOfAllAnts(data);  
+        chooseActionsOfAllAnts(data);
 
         CommData sendData = data.packageForSendToServer();
         
@@ -254,6 +256,30 @@ public class ClientRandomWalk
     }
   }
 
+  private void detectAttacks(CommData data)
+  {
+    for(AntData enemy : data.enemyAntSet)
+    {
+      if(enemy.myAction.type == AntActionType.ATTACK)
+      {
+        int x = enemy.myAction.x;
+        int y = enemy.myAction.y;
+        boolean tempAttack = false;
+
+        for(AntData ant : data.myAntList)
+        {
+          if(ant.gridX == x && ant.gridY == y)
+          {
+            attacked.replace(ant.id, true);
+            tempAttack = true;
+          }
+
+          if(!tempAttack) attacked.replace(ant.id, false);
+        }
+      }
+    }
+  }
+
   private void findResources(CommData data)
   {
     Coordinate foodCoordinate;
@@ -292,6 +318,7 @@ public class ClientRandomWalk
   {
     if (ant.underground)
     {
+
       if(ant.health != ant.antType.getMaxHealth() && data.foodStockPile[FoodType.WATER.ordinal()] > 0)
       {
         action.type = AntActionType.HEAL;
@@ -316,6 +343,7 @@ public class ClientRandomWalk
       action.type = AntActionType.EXIT_NEST;
       action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
       action.y = centerY - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
+      walk.determineDirection(data, ant, action.x, action.y, centerX, centerY);
       return true;
     }
     return false;
@@ -378,7 +406,7 @@ public class ClientRandomWalk
           break; // don't go through the rest
         }
       }
-      else // not aggresive but will defend
+      else // not aggressive but will defend
       {
         // ant attacked one of our ants
         if(enemy.myAction.type == AntActionType.ATTACK &&
@@ -515,7 +543,7 @@ public class ClientRandomWalk
 
   /**
    * Primitive exploration algorithm. Uses a semi random walk which uses a normal distribution of directions.
-   * TODO logic for when obstacle is encountered. 
+   * TODO logic for when obstacle is encountered.
    * @param data
    * @param ant
    * @param action
@@ -523,7 +551,9 @@ public class ClientRandomWalk
    */
   private boolean goExplore(CommData data, AntData ant, AntAction action)
   {
+//    System.out.println("EXPLORE");
     Direction dir = walk.getDirection(ant);
+    //Direction dir = Direction.NORTH;
     action.type = AntActionType.MOVE;
     action.direction = dir;
     return true;
@@ -534,6 +564,13 @@ public class ClientRandomWalk
   {
     AntAction action = new AntAction(AntActionType.STASIS);
 
+    if(data.gameTick != AIconstants.CHANGE_DIR_TICK) ++changeDir;
+    else
+    {
+      changeDir = 0;
+      walk.normalDirectionChange(ant);
+    }
+
     if (ant.ticksUntilNextAction > 0) return ant.myAction;
 
     if (exitNest(data, ant, action)) return action;
@@ -542,15 +579,15 @@ public class ClientRandomWalk
 
     if (pickUpFoodAdjacent(data, ant, action)) return action;
 
-    if (goHomeIfCarryingOrHurt(data, ant, action)) return action;
+//    if (goHomeIfCarryingOrHurt(data, ant, action)) return action;
 
     if (pickUpWater(data, ant, action)) return action;
 
-    if (goToEnemyAnt(data, ant, action)) return action;
-
-    if (goToFood(data, ant, action)) return action;
-
-    if (goToGoodAnt(data, ant, action)) return action;
+//    if (goToEnemyAnt(data, ant, action)) return action;
+//
+//    if (goToFood(data, ant, action)) return action;
+//
+//    if (goToGoodAnt(data, ant, action)) return action;
 
     if (goExplore(data, ant, action)) return action;
 
@@ -569,7 +606,7 @@ public class ClientRandomWalk
     String serverHost = "localhost";
     if (args.length > 0) serverHost = args[args.length -1];
 
-    TeamNameEnum team = TeamNameEnum.RANDOM_WALKERS;
+    TeamNameEnum team = TeamNameEnum.Hector_Haijin;
     if (args.length > 1)
     { team = TeamNameEnum.getTeamByString(args[0]);
     }
