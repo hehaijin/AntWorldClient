@@ -27,7 +27,7 @@ public class ClientRandomWalk
   private int centerX, centerY;
   private SemiRandomWalk walk;
   private boolean firstRun = true;
-  private int changeDir = 0;
+  private int changeDir = 1;
 
   private Socket clientSocket;
 
@@ -257,11 +257,14 @@ public class ClientRandomWalk
 
   private void chooseActionsOfAllAnts(CommData commData)
   {
+    if(changeDir != AIconstants.CHANGE_DIR_TICK) ++changeDir;
+    else changeDir = 0;
     for (AntData ant : commData.myAntList)
     {
       AntAction action = chooseAction(commData, ant);
       ant.myAction = action;
     }
+
   }
 
   private void detectAttacks(CommData data)
@@ -596,10 +599,9 @@ public class ClientRandomWalk
   {
     AntAction action = new AntAction(AntActionType.STASIS);
 
-    if(data.gameTick != AIconstants.CHANGE_DIR_TICK) ++changeDir;
-    else
+    if(changeDir == AIconstants.CHANGE_DIR_TICK)
     {
-      changeDir = 0;
+      System.out.println("CHANGING DIRECTION");
       walk.normalDirectionChange(ant);
     }
 

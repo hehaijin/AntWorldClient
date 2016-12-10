@@ -49,6 +49,7 @@ public class SemiRandomWalk
     distributions.put(Direction.SOUTHEAST, southeast);
     distributions.put(Direction.SOUTHWEST, southwest);
 
+    // for collisions
     possible.add(Direction.NORTH);
     possible.add(Direction.SOUTH);
     possible.add(Direction.EAST);
@@ -77,11 +78,11 @@ public class SemiRandomWalk
     Direction middleLeft = Direction.getRightDir(left);
     Direction middleRight = Direction.getLeftDir(right);
 
-    for(int i = 0; i < 30; i++) distribution.add(one);
-    for(int i = 0; i < 8; i++) distribution.add(middleLeft);
-    for(int i = 0; i < 8; i++) distribution.add(middleRight);
-    for(int i = 0; i < 2; i++) distribution.add(right);
-    for(int i = 0; i < 2; i++) distribution.add(left);
+    for(int i = 0; i < 24; i++) distribution.add(one);
+    for(int i = 0; i < 10; i++) distribution.add(middleLeft);
+    for(int i = 0; i < 10; i++) distribution.add(middleRight);
+    for(int i = 0; i < 3; i++) distribution.add(right);
+    for(int i = 0; i < 3; i++) distribution.add(left);
 
     return distribution;
   }
@@ -152,15 +153,16 @@ public class SemiRandomWalk
       System.out.println("Didn't choose. SLOPE: " + slope + " x: " + xdiff + " y: " + ydiff);
   }
 
-  public void vision(AntData ant)
-  {
-
-  }
-
   public void normalDirectionChange(AntData ant)
   {
-    Direction newDir = distributions.get(direction.get(ant.id)).get(Constants.random.nextInt(50));
-    direction.replace(ant.id, newDir);
+    Direction[] d = new Direction[5];
+    d[0] = direction.get(ant.id);
+    d[1] = Direction.getLeftDir(d[0]);
+    d[2] = Direction.getRightDir(d[0]);
+    d[3] = Direction.getLeftDir(d[2]);
+    d[4] = Direction.getRightDir(d[1]);
+
+    direction.replace(ant.id, d[Constants.random.nextInt(5)]);
   }
 
   public void waterDirectionChange(AntData ant)
