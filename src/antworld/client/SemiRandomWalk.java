@@ -21,20 +21,24 @@ public class SemiRandomWalk
   private ArrayList<Direction> southwest; // se, s, SW, w, nw
   private ArrayList<Direction> southeast; // ne, e, SE, s, sw
 
+  private ArrayList<Direction> possible = new ArrayList<>(8);
+
+  private HashMap<Integer, Integer> numCollisions = new HashMap<>();
   private HashMap<Direction, ArrayList<Direction>> distributions = new HashMap<>();
 
   private HashMap<Integer, Direction> direction = new HashMap<>();
 
   public SemiRandomWalk(CommData data, NestNameEnum nestName)
   {
-    north = distribute(Direction.NORTH, Direction.NORTHWEST, Direction.NORTHEAST, Direction.WEST, Direction.EAST);
-    south = distribute(Direction.SOUTH, Direction.SOUTHEAST, Direction.SOUTHWEST, Direction.EAST, Direction.WEST);
-    east = distribute(Direction.EAST, Direction.SOUTHEAST, Direction.NORTHEAST, Direction.NORTH, Direction.SOUTH);
-    west = distribute(Direction.WEST, Direction.NORTHWEST, Direction.SOUTHWEST, Direction.SOUTH, Direction.NORTH);
-    northwest = distribute(Direction.NORTHWEST, Direction.WEST, Direction.NORTH, Direction.SOUTHWEST, Direction.NORTHEAST);
-    northeast = distribute(Direction.NORTHEAST, Direction.NORTH, Direction.EAST, Direction.NORTHWEST, Direction.SOUTHEAST);
-    southwest = distribute(Direction.SOUTHWEST, Direction.SOUTH, Direction.WEST, Direction.SOUTHEAST, Direction.NORTHWEST);
-    southeast = distribute(Direction.SOUTHEAST, Direction.EAST, Direction.SOUTH, Direction.NORTHEAST, Direction.SOUTHWEST);
+
+    north = distribute(Direction.NORTH);
+    south = distribute(Direction.SOUTH);
+    east = distribute(Direction.EAST);
+    west = distribute(Direction.WEST);
+    northwest = distribute(Direction.NORTHWEST);
+    northeast = distribute(Direction.NORTHEAST);
+    southwest = distribute(Direction.SOUTHWEST);
+    southeast = distribute(Direction.SOUTHEAST);
 
     distributions.put(Direction.NORTH, north);
     distributions.put(Direction.EAST, east);
@@ -44,26 +48,40 @@ public class SemiRandomWalk
     distributions.put(Direction.NORTHWEST, northwest);
     distributions.put(Direction.SOUTHEAST, southeast);
     distributions.put(Direction.SOUTHWEST, southwest);
+
+    possible.add(Direction.NORTH);
+    possible.add(Direction.SOUTH);
+    possible.add(Direction.EAST);
+    possible.add(Direction.WEST);
+    possible.add(Direction.NORTHEAST);
+    possible.add(Direction.NORTHWEST);
+    possible.add(Direction.SOUTHEAST);
+    possible.add(Direction.SOUTHWEST);
+
+    for(AntData ant : data.myAntList)
+    {
+      numCollisions.put(ant.id, 0);
+    }
   }
 
   /**
    * Creates distributions
    * @param one most likely direction
-   * @param two second most likely direction
-   * @param three third most likely direction
-   * @param four fourth most likely direction
-   * @param five fifth most likely direction
-   * @return
+   * @return array distribution
    */
-  private ArrayList<Direction> distribute(Direction one, Direction two, Direction three, Direction four, Direction five)
+  private ArrayList<Direction> distribute(Direction one)
   {
-    ArrayList<Direction> distribution = new ArrayList<>();
+    ArrayList<Direction> distribution = new ArrayList<>(50);
+    Direction left = Direction.getLeftDir(one);
+    Direction right = Direction.getRightDir(one);
+    Direction middleLeft = Direction.getRightDir(left);
+    Direction middleRight = Direction.getLeftDir(right);
 
     for(int i = 0; i < 30; i++) distribution.add(one);
-    for(int i = 0; i < 8; i++) distribution.add(two);
-    for(int i = 0; i < 8; i++) distribution.add(three);
-    for(int i = 0; i < 2; i++) distribution.add(four);
-    for(int i = 0; i < 2; i++) distribution.add(five);
+    for(int i = 0; i < 8; i++) distribution.add(middleLeft);
+    for(int i = 0; i < 8; i++) distribution.add(middleRight);
+    for(int i = 0; i < 2; i++) distribution.add(right);
+    for(int i = 0; i < 2; i++) distribution.add(left);
 
     return distribution;
   }
@@ -74,46 +92,96 @@ public class SemiRandomWalk
    */
   public void determineDirection(CommData data, AntData ant, int x, int y, int nestx, int nesty)
   {
-      int xdiff = x - nestx;
-      int ydiff = y - nesty;
+    int xdiff = x - nestx;
+    int ydiff = y - nesty;
 
-      if (ydiff == 0) ydiff = 1;
-      double slope = xdiff / ydiff;
+    if (ydiff == 0) ydiff = 1;
+    double slope = xdiff / ydiff;
 
-      if (xdiff >= 0 && ydiff > 0)
-      {
-        if (slope <= .4) {direction.put(ant.id, Direction.EAST); return;}
-        if (slope <= 2.4 && slope > .4) {direction.put(ant.id, Direction.SOUTHEAST); return;}
-        if (slope > 2.4) {direction.put(ant.id, Direction.SOUTH); return;}
-      }
+//      if (xdiff >= 0 && ydiff > 0)
+//      {
+//        if (slope <= .4) {direction.put(ant.id, Direction.EAST); return;}
+//        if (slope <= 2.4 && slope > .4) {direction.put(ant.id, Direction.SOUTHEAST); return;}
+//        if (slope > 2.4) {direction.put(ant.id, Direction.SOUTH); return;}
+//      }
+//
+//      if (xdiff >= 0 && ydiff < 0)
+//      {
+//        if (slope >= -.4) {direction.put(ant.id, Direction.EAST); return;}
+//        if (slope >= -2.4 && slope < -.4) {direction.put(ant.id, Direction.NORTHEAST); return;}
+//        if (slope < -2.4) {direction.put(ant.id, Direction.NORTH); return;}
+//      }
+//
+//      if (xdiff <= 0 && ydiff > 0)
+//      {
+//        if (slope >= -.4) {direction.put(ant.id, Direction.WEST); return;}
+//        if (slope >= -2.4 && slope < -.4) {direction.put(ant.id, Direction.SOUTHWEST); return;}
+//        if (slope < -2.4) {direction.put(ant.id, Direction.SOUTH); return;}
+//      }
+//
+//      if (xdiff <= 0 && ydiff < 0)
+//      {
+//        if (slope <= .4) {direction.put(ant.id, Direction.WEST); return;}
+//        if (slope <= 2.4 && slope > .4) {direction.put(ant.id, Direction.NORTHWEST); return;}
+//        if (slope > 2.4) {direction.put(ant.id, Direction.NORTH); return;}
+//      }
 
-      if (xdiff >= 0 && ydiff < 0)
-      {
-        if (slope >= -.4) {direction.put(ant.id, Direction.EAST); return;}
-        if (slope >= -2.4 && slope < -.4) {direction.put(ant.id, Direction.NORTHEAST); return;}
-        if (slope < -2.4) {direction.put(ant.id, Direction.NORTH); return;}
-      }
+    if (xdiff >= 0 && ydiff > 0)
+    {
+      if (slope <= 1) {direction.put(ant.id, Direction.EAST); return;}
+      if (slope > 1) {direction.put(ant.id, Direction.SOUTH); return;}
+    }
 
-      if (xdiff <= 0 && ydiff > 0)
-      {
-        if (slope >= -.4) {direction.put(ant.id, Direction.WEST); return;}
-        if (slope >= -2.4 && slope < -.4) {direction.put(ant.id, Direction.SOUTHWEST); return;}
-        if (slope < -2.4) {direction.put(ant.id, Direction.SOUTH); return;}
-      }
+    if (xdiff >= 0 && ydiff < 0)
+    {
+      if (slope >= -1) {direction.put(ant.id, Direction.EAST); return;}
+      if (slope < -1) {direction.put(ant.id, Direction.NORTH); return;}
+    }
 
-      if (xdiff <= 0 && ydiff < 0)
-      {
-        if (slope <= .4) {direction.put(ant.id, Direction.WEST); return;}
-        if (slope <= 2.4 && slope > .4) {direction.put(ant.id, Direction.NORTHWEST); return;}
-        if (slope > 2.4) {direction.put(ant.id, Direction.NORTH); return;}
-      }
+    if (xdiff <= 0 && ydiff > 0)
+    {
+      if (slope >= -1) {direction.put(ant.id, Direction.WEST); return;}
+      if (slope < -1) {direction.put(ant.id, Direction.SOUTH); return;}
+    }
+
+    if (xdiff <= 0 && ydiff < 0)
+    {
+      if (slope <= 1) {direction.put(ant.id, Direction.WEST); return;}
+      if (slope > 1) {direction.put(ant.id, Direction.NORTH); return;}
+    }
       System.out.println("Didn't choose. SLOPE: " + slope + " x: " + xdiff + " y: " + ydiff);
+  }
+
+  public void vision(AntData ant)
+  {
+
   }
 
   public void normalDirectionChange(AntData ant)
   {
     Direction newDir = distributions.get(direction.get(ant.id)).get(Constants.random.nextInt(50));
     direction.replace(ant.id, newDir);
+  }
+
+  public void waterDirectionChange(AntData ant)
+  {
+    if(ant.myAction.type == AntAction.AntActionType.STASIS)
+    {
+      ArrayList<Direction> possible = new ArrayList<>(8);
+      possible.addAll(this.possible);
+      for (int i = 0; i < 9; i++)
+      {
+        int m = i / 3 - 1;
+        int n = i % 3 - 1;
+
+        if(Graph.getLandType(ant.gridX+m,ant.gridY+n) == LandType.WATER)
+        {
+          possible.remove(Coordinate.getDirection(m, n));
+        }
+      }
+      // remove going back
+      possible.remove(Direction.getLeftDir(Direction.getLeftDir(direction.get(ant.id))));
+    }
   }
 
   /**

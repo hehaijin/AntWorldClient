@@ -15,4 +15,5 @@ public class AIconstants
   public static final int DEFENSE_ANT_ATTACK_HEALTH_DIFF = 3;
 
   public static final int CHANGE_DIR_TICK = 250;
+  public static final int MAX_COLLISIONS = 10;
 }

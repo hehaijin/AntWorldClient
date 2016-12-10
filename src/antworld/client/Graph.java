@@ -48,9 +48,10 @@ public class Graph
     }
   }
 
-  int worldWidth = 5000;
-  int worldHeight = 2500;
-  Node[][] world = new Node[worldWidth][worldHeight];
+  private static int worldWidth = 5000;
+  private static int worldHeight = 2500;
+  // public for collision detection
+  private static Node[][] world = new Node[worldWidth][worldHeight];
 
   public Graph()
   {
@@ -96,6 +97,9 @@ public class Graph
     System.out.println("now calculating edges");
     calculateEdges();
   }
+
+  public static LandType getLandType(int x, int y) {return world[x][y].landtype;}
+
 
   public Node getNode(int x, int y)
   {
