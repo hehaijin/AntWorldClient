@@ -50,6 +50,9 @@ public class Coordinate
   }
 
   @Override
+  /**
+   * Checks if two coordinates are the same
+   */
   public boolean equals(Object coordinate)
   {
     Coordinate c = (Coordinate) coordinate;
@@ -57,6 +60,12 @@ public class Coordinate
     return false;
   }
 
+  /**
+   * Checks if two coordinates are equal
+   * @param x
+   * @param y
+   * @return
+   */
   public boolean equals(int x, int y)
   {
     if(this.getX() == x && this.getY() == y) return true;
@@ -92,14 +101,14 @@ public class Coordinate
     return getDirection(cell.getX() - ant.getX(), cell.getY() - ant.getY());
   }
 
-  public static Direction getDirectionX(Coordinate o1, Coordinate o2)
+  public static Direction getDirectionX(Coordinate cell, Coordinate ant)
   {
-    return getDirectionX(o1.getX() - o2.getX());
+    return getDirectionX(cell.getX() - ant.getX());
   }
 
-  public static Direction getDirectionY(Coordinate o1, Coordinate o2)
+  public static Direction getDirectionY(Coordinate cell, Coordinate ant)
   {
-    return getDirectionX(o1.getY() - o2.getY());
+    return getDirectionX(cell.getY() - ant.getY());
   }
 
   public static Direction getDirectionX(int xdiff)
