@@ -544,7 +544,6 @@ public class ClientRandomWalk
       return true;
     }
 
-
     return false;
   }
 
@@ -570,8 +569,6 @@ public class ClientRandomWalk
       action.type=AntActionType.MOVE;
       return true;
     }
-
-
 
     return false;
   }
@@ -618,6 +615,8 @@ public class ClientRandomWalk
 
     if (pickUpWater(data, ant, action)) return action;
 
+    // only for enemy ants close to ant
+    //
 //    if (goToEnemyAnt(data, ant, action)) return action;
 //
 //    if (goToFood(data, ant, action)) return action;

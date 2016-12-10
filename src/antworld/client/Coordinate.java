@@ -83,4 +83,16 @@ public class Coordinate
     }
     return null;
   }
+
+  public static Direction getDirectionX(int xdiff)
+  {
+    if(xdiff < 0) return Direction.EAST;
+    return Direction.WEST;
+  }
+
+  public static Direction getDirectionY(int ydiff)
+  {
+    if(ydiff < 0) return Direction.SOUTH;
+    return Direction.NORTH;
+  }
 }

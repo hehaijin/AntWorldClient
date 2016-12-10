@@ -116,6 +116,49 @@ public class SemiRandomWalk
     direction.replace(ant.id, newDir);
   }
 
+  public Path straightLine(int startX, int startY, int endX, int endY)
+  {
+    Path line = new Path();
+    int xdiff = endX - startX;
+    int ydiff = endY - startY;
+    int xdiff_abs = Math.abs(xdiff);
+    int ydiff_abs = Math.abs(ydiff);
+
+    int dirX = xdiff/xdiff_abs;
+    int dirY = ydiff/ydiff_abs;
+    Direction diag = Coordinate.getDirection(dirX, dirY);
+    Direction straightX = Coordinate.getDirectionX(xdiff);
+    Direction straightY = Coordinate.getDirectionY(ydiff);
+
+    int max = Math.max(xdiff_abs, xdiff_abs);
+
+    // first goes in a diagonal
+    for(int i = 0; i < Math.min(xdiff, ydiff); i++)
+    {
+      line.add(diag);
+    }
+
+    // then goes in straight line, either on the x axis or y axis
+
+    if(max == xdiff_abs)
+    {
+      for (int i = 0; i < xdiff - ydiff; i++)
+      {
+        line.add(straightX);
+      }
+    }
+
+    if(max == ydiff_abs)
+    {
+      for (int i = 0; i < ydiff - xdiff; i++)
+      {
+        line.add(straightY);
+      }
+    }
+
+    return line;
+  }
+
   /**
    * Gets random direction for the ant to go too
    * @param ant
