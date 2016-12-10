@@ -9,7 +9,7 @@ public class Path
 
   Direction getNext()
   {
-    return path.pop();
+    return path.getLast();
   }
 
   /**
@@ -19,12 +19,33 @@ public class Path
    */
   void add(Direction node)
   {
-    path.push(node);
+    path.addLast(node);
   }
 
   int size()
   {
     return path.size();
+  }
+  
+  void addPath(Path p)
+  {
+    while(!p.path.isEmpty())
+    {
+      Direction d=p.path.getFirst(); 
+      path.addLast(d);
+    }
+ 
+  }
+  
+  void addPathToHead(Path p)
+  {
+    while(!p.path.isEmpty())
+    {
+      Direction d=p.path.getLast();
+      path.addFirst(d);
+    }
+    
+    
   }
 
   // TODO do you want this?
