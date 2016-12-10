@@ -83,4 +83,10 @@ public class Coordinate
     }
     return null;
   }
+  
+  public static int getDistance(Coordinate co1, Coordinate co2)
+  {
+    return Math.max(Math.abs(co1.getX()-co2.getX()), Math.abs(co1.getY()-co2.getY()));
+  }
+  
 }
