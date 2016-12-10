@@ -167,22 +167,26 @@ public class SemiRandomWalk
 
   public void waterDirectionChange(AntData ant)
   {
-    if(ant.myAction.type == AntAction.AntActionType.STASIS)
+    ArrayList<Direction> possible = new ArrayList<>(8);
+    boolean collision = false;
+    possible.addAll(this.possible);
+    for (int i = 0; i < 9; i++)
     {
-      ArrayList<Direction> possible = new ArrayList<>(8);
-      possible.addAll(this.possible);
-      for (int i = 0; i < 9; i++)
-      {
-        int m = i / 3 - 1;
-        int n = i % 3 - 1;
+      int m = i / 3 - 1;
+      int n = i % 3 - 1;
 
-        if(Graph.getLandType(ant.gridX+m,ant.gridY+n) == LandType.WATER)
-        {
-          possible.remove(Coordinate.getDirection(m, n));
-        }
+      if (Graph.getLandType(ant.gridX + m, ant.gridY + n) == LandType.WATER)
+      {
+        possible.remove(Coordinate.getDirection(m, n));
+        collision = true;
       }
+    }
+
+    if(collision == true)
+    {
       // remove going back
       possible.remove(Direction.getLeftDir(Direction.getLeftDir(direction.get(ant.id))));
+      direction.replace(ant.id, possible.get(Constants.random.nextInt(possible.size())));
     }
   }
 

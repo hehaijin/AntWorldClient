@@ -75,23 +75,12 @@ public class Coordinate
   // Gives the direction of the adjacent food/enemy using coordinate subtraction
   public static Direction getDirection(int xdiff, int ydiff)
   {
-    if(ydiff == 1)
+    for(Direction dir : Direction.values())
     {
-      if(xdiff == 1) return Direction.SOUTHEAST;
-      if(xdiff == 0) return Direction.SOUTH;
-      if(xdiff == -1) return Direction.SOUTHWEST;
-    }
-    if(ydiff == 0)
-    {
-      if(xdiff == 1) return Direction.EAST;
-      if(xdiff == 0) return null;
-      if(xdiff == -1) return Direction.WEST;
-    }
-    if(ydiff == -1)
-    {
-      if(xdiff == 1) return Direction.NORTHEAST;
-      if(xdiff == 0) return Direction.NORTH;
-      if(xdiff == -1) return Direction.NORTHWEST;
+      if(dir.deltaX() == xdiff && dir.deltaY() == ydiff)
+      {
+        return dir;
+      }
     }
     return null;
   }

@@ -29,6 +29,8 @@ public class ClientRandomWalk
   private boolean firstRun = true;
   private int changeDir = 1;
 
+  private Graph graph;
+
   private Socket clientSocket;
 
   private static ArrayList<Coordinate> foodLocations = new ArrayList<>();
@@ -61,6 +63,7 @@ public class ClientRandomWalk
     System.out.println("Starting " + team +" on " + host + ":" + portNumber + " at "
       + System.currentTimeMillis());
 
+    graph = new Graph();
     isConnected = openConnection(host, portNumber);
     if (!isConnected) System.exit(0);
     CommData data = obtainNest();
@@ -601,7 +604,6 @@ public class ClientRandomWalk
 
     if(changeDir == AIconstants.CHANGE_DIR_TICK)
     {
-      System.out.println("CHANGING DIRECTION");
       walk.normalDirectionChange(ant);
     }
 
@@ -624,6 +626,9 @@ public class ClientRandomWalk
 //    if (goToFood(data, ant, action)) return action;
 //
 //    if (goToGoodAnt(data, ant, action)) return action;
+
+    if(ant.myAction.type == AntActionType.STASIS) walk.waterDirectionChange(ant);
+
 
     if (goExplore(data, ant, action)) return action;
 
