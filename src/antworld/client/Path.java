@@ -96,7 +96,17 @@ public class Path
     return straightLine(start.getX(), start.getY(), end.getX(), end.getY());
   }
 
-  // TODO do you want this?
+  
+  
+  public boolean hasNext()
+  {
+    if(path.size() >0) return true;
+    return false;
+  }
+  
+  
+  
+  // TODO do you want this?  
   public static void main(String[] args)
   {
     // TODO Auto-generated method stub
