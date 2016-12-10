@@ -6,6 +6,9 @@ import java.util.Objects;
 
 /**
  * This class stores coordinates, does math with them.
+ * NOTE: to calculate direction the functions need the difference in x and y coordinates.
+ * This difference MUST BE the coordinate of the desired cell - the coordinate of the ant. It can also be thought of as
+ * end - start
  * Created by Hector on 12/4/16.
  */
 public class Coordinate
@@ -41,7 +44,7 @@ public class Coordinate
    * @param y2 coordinate of second item
    * @return manhattan distance
    */
-  public static int distance(int x1, int y1, int x2, int y2)
+  public static int getDistance(int x1, int y1, int x2, int y2)
   {
     return Math.abs(x1 - x2) + Math.abs(y1 - y2);
   }
@@ -82,6 +85,21 @@ public class Coordinate
       if(xdiff == -1) return Direction.NORTHWEST;
     }
     return null;
+  }
+
+  public static Direction getDirection(Coordinate cell, Coordinate ant)
+  {
+    return getDirection(cell.getX() - ant.getX(), cell.getY() - ant.getY());
+  }
+
+  public static Direction getDirectionX(Coordinate o1, Coordinate o2)
+  {
+    return getDirectionX(o1.getX() - o2.getX());
+  }
+
+  public static Direction getDirectionY(Coordinate o1, Coordinate o2)
+  {
+    return getDirectionX(o1.getY() - o2.getY());
   }
 
   public static Direction getDirectionX(int xdiff)
