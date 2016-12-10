@@ -48,7 +48,7 @@ public class Path
     
   }
 
-  public Path straightLine(int startX, int startY, int endX, int endY)
+  public static Path straightLine(int startX, int startY, int endX, int endY)
   {
     Path line = new Path();
     int xdiff = endX - startX;

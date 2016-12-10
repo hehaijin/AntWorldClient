@@ -74,9 +74,11 @@ public class Graph
   
   
 
-  int worldWidth = 5000;
-  int worldHeight = 2500;
-  Node[][] world = new Node[worldWidth][worldHeight];
+  private static int worldWidth = 5000;
+  private static int worldHeight = 2500;
+  
+//public for collision detection 
+  private static Node[][] world = new Node[worldWidth][worldHeight];
 
   
   
@@ -312,7 +314,8 @@ public class Graph
   }
 
 
-  
+  public static LandType getLandType(int x, int y) {return world[x][y].landtype;} 
+
   
   
   public static void main(String[] args)
