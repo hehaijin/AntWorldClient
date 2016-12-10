@@ -22,7 +22,8 @@ import java.io.Serializable;
 public class AntAction implements Serializable
 {
   private static final long serialVersionUID = Constants.VERSION;
-  public enum AntActionType 
+
+  public enum AntActionType
   { MOVE,       // MOVE direction
     ATTACK,     // ATTACK direction
     PICKUP,     // PICKUP direction quantity

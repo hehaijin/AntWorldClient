@@ -60,7 +60,6 @@ public class AntData implements Comparable<AntData>, Serializable
    * in a direction where there is not an ant, ...)</li>
    * <li> When ticksUntilNextAction is > 0.</li>
    * </ol>
-   * 
    * */
   public AntAction myAction;
 
