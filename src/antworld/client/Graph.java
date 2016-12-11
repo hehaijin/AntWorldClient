@@ -1,12 +1,11 @@
 package antworld.client;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.PriorityQueue;
+import java.nio.file.Paths;
+import java.util.*;
 
 import javax.imageio.ImageIO;
 
@@ -52,6 +51,7 @@ public class Graph
   private static int worldHeight = 2500;
   // public for collision detection
   private static Node[][] world = new Node[worldWidth][worldHeight];
+  ArrayList<Coordinate> c = new ArrayList<>();
 
   public Graph()
   {
@@ -69,7 +69,6 @@ public class Graph
     {
       for (int y = 0; y < worldHeight; y++)
       {
-
         int rgb = (image.getRGB(x, y) & 0x00FFFFFF);
         LandType landType;
         int height = 0;
@@ -214,15 +213,60 @@ public class Graph
     Node p = end;
     Node pre = end.pre;
     path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
-    while (p.pre != null)
+
+
+    c.add(c.size(), new Coordinate(p.x, p.y));
+    c.add(c.size(), new Coordinate(pre.x, pre.y));
+
+    while (p.pre.pre != null)
     {
       p = pre;
       pre = p.pre;
+      c.add(c.size() - 1, new Coordinate(p.x, p.y));
+      c.add(c.size() - 1, new Coordinate(pre.x, pre.y));
       path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
     }
     System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
+
+    drawPath();
+
     return path;
 
+  }
+
+  private void drawPath()
+  {
+    BufferedImage image = null;
+    try
+    {
+      image = ImageIO.read(new File("resources/test.png"));
+    } catch (IOException ie)
+    {
+      System.out.println("image load failure");
+    }
+    System.out.println("loading the picture done");
+
+    for (int x = 0; x < worldWidth; x++)
+    {
+      for (int y = 0; y < worldHeight; y++)
+      {
+        if(c.contains(new Coordinate(x,y)))
+        {
+          image.setRGB(x,y,0xFF0000);
+        }
+      }
+    }
+    try
+    {
+      File outputfile = new File("saved.png");
+      ImageIO.write(image, "png", outputfile);
+    }
+    catch(IOException e)
+    {
+      System.out.println(e);
+    }
+
+    System.out.println("now calculating edges");
   }
 
   public void initiateGraph()
@@ -253,8 +297,8 @@ public class Graph
   {
     // TODO Auto-generated method stub
     Graph g = new Graph();
-    System.out.println(g.findPath(g.getNode(300, 300), g.getNode(800, 900)).size());
-
+    System.out.println(g.findPath(g.getNode(300, 300), g.getNode(4550, 2190)).size());
+//    System.out.println(g.findPath(g.getNode(300, 300), g.getNode(500, 500)).size());
   }
 
 }

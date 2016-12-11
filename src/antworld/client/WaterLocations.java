@@ -1,6 +1,9 @@
 package antworld.client;
 
+import antworld.common.CommData;
 import antworld.common.LandType;
+import antworld.common.NestData;
+import antworld.common.NestNameEnum;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -34,7 +37,7 @@ public class WaterLocations
   BufferedImage image;
   Node[][] world = new Node[worldWidth][worldHeight];
   ArrayList<Coordinate> waterLocations;
-  BufferedWriter writer;
+  OutputStreamWriter writer;
 
   public WaterLocations()
   {
@@ -75,46 +78,83 @@ public class WaterLocations
         world[x][y] = new Node(landType, x, y);
       }
     }
+    System.out.println("MAP DONE");
+
   }
 
-  private void write()
+  public void write(CommData data)
   {
+    System.out.println("WRITING");
     java.nio.file.Path out = Paths.get("waterLocations.txt");
     try {
       OutputStream write = Files.newOutputStream(out);
-      this.writer = new BufferedWriter(new OutputStreamWriter(write));
+      this.writer = new OutputStreamWriter(write);
+
+      for (int i = 0; i < waterLocations.size(); i++)
+      {
+        writer.write(String.valueOf(i));
+        writer.write(" ");
+        writer.write(String.valueOf(data.nestData[i].centerX));
+        writer.write(" ");
+        writer.write(String.valueOf(data.nestData[i].centerY));
+        writer.write(" ");
+        writer.write(String.valueOf(waterLocations.get(i).getX()));
+        writer.write(" ");
+        writer.write(String.valueOf(waterLocations.get(i).getY()));
+        writer.write("\n");
+      }
+      writer.close();
     } catch (IOException e )
     {
       System.out.println(e);
       System.exit(-1);
     }
+  }
 
-    for(Coordinate c : waterLocations)
+  public ArrayList<Coordinate> reduce(CommData data, ArrayList<Coordinate> water)
+  {
+    int minDist;
+    Coordinate[] temp = new Coordinate[data.nestData.length];
+    ArrayList<Coordinate> nearestSources = new ArrayList<>(data.nestData.length);
+
+    for(NestData nest : data.nestData)
     {
-      try{
-        writer.write(String.valueOf(c.getX()));
-        writer.write(" ");
-        writer.write(String.valueOf(c.getY()));
-        writer.write("\n");
-      } catch (IOException e)
+      minDist = 10000;
+      for(Coordinate c : water)
       {
-        System.out.println(e);
-        System.exit(-1);
+        if(Coordinate.getDistance(c.getX(),c.getY(),nest.centerX, nest.centerY) < minDist)
+        {
+          minDist = Coordinate.getDistance(c, new Coordinate(nest.centerX, nest.centerY));
+          temp[nest.nestName.ordinal()] = c;
+        }
       }
     }
-    // write end of file
-    try{
-      writer.write(-1);
-    } catch (IOException e)
+
+    for(int i = 0; i < data.nestData.length; i++)
+    {
+      nearestSources.add(i, temp[i]);
+    }
+    System.out.println(nearestSources.size());
+    return nearestSources;
+  }
+
+  private void makePath()
+  {
+    String line;
+    String[] split;
+    try
+    {
+      BufferedReader read = new BufferedReader(Files.newBufferedReader(Paths.get("waterLocations.txt")));
+      while((line = read.readLine()) != null)
+      {
+        split = line.split(" ");
+      }
+    }
+    catch(IOException e)
     {
       System.out.println(e);
     }
   }
-
-//  private ArrayList<Coordinate> reduce(ArrayList<Coordinate> water)
-//  {
-//    for(int i = 0; i < water)
-//  }
 
   private boolean isGrass(Node[][] world, int x, int y)
   {
@@ -152,6 +192,7 @@ public class WaterLocations
   {
     WaterLocations water = new WaterLocations();
     water.findWater(water.world);
-    water.write();
+//    water.waterLocations = water.reduce();
+//    water.write();
   }
 }

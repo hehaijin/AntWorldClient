@@ -1,10 +1,10 @@
 package antworld.client;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -63,13 +63,25 @@ public class ClientRandomWalk
     System.out.println("Starting " + team +" on " + host + ":" + portNumber + " at "
       + System.currentTimeMillis());
 
-    graph = new Graph();
+    preCalculate();
     isConnected = openConnection(host, portNumber);
     if (!isConnected) System.exit(0);
     CommData data = obtainNest();
+
+    // for detecting nearest water locations, should not be runned most of the time
+//    WaterLocations water = new WaterLocations();
+//    water.findWater(water.world);
+//    water.waterLocations = water.reduce(data, water.waterLocations);
+//    water.write(data);
+
     walk = new SemiRandomWalk(data, myNestName);
     mainGameLoop(data);
     closeAll();
+  }
+
+  private void preCalculate()
+  {
+    graph = new Graph();
   }
 
   private boolean openConnection(String host, int portNumber)
@@ -502,6 +514,7 @@ public class ClientRandomWalk
   }
 
   /**
+   * // TODO this does not work
    * @param data
    * @param ant
    * @param action

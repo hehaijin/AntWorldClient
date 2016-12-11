@@ -79,10 +79,10 @@ public class SemiRandomWalk
     Direction middleRight = Direction.getLeftDir(right);
 
     for(int i = 0; i < 24; i++) distribution.add(one);
-    for(int i = 0; i < 10; i++) distribution.add(middleLeft);
-    for(int i = 0; i < 10; i++) distribution.add(middleRight);
-    for(int i = 0; i < 3; i++) distribution.add(right);
-    for(int i = 0; i < 3; i++) distribution.add(left);
+    for(int i = 0; i < 11; i++) distribution.add(middleLeft);
+    for(int i = 0; i < 11; i++) distribution.add(middleRight);
+    for(int i = 0; i < 2; i++) distribution.add(right);
+    for(int i = 0; i < 2; i++) distribution.add(left);
 
     return distribution;
   }
@@ -99,70 +99,117 @@ public class SemiRandomWalk
     if (ydiff == 0) ydiff = 1;
     double slope = xdiff / ydiff;
 
-//      if (xdiff >= 0 && ydiff > 0)
-//      {
-//        if (slope <= .4) {direction.put(ant.id, Direction.EAST); return;}
-//        if (slope <= 2.4 && slope > .4) {direction.put(ant.id, Direction.SOUTHEAST); return;}
-//        if (slope > 2.4) {direction.put(ant.id, Direction.SOUTH); return;}
-//      }
-//
-//      if (xdiff >= 0 && ydiff < 0)
-//      {
-//        if (slope >= -.4) {direction.put(ant.id, Direction.EAST); return;}
-//        if (slope >= -2.4 && slope < -.4) {direction.put(ant.id, Direction.NORTHEAST); return;}
-//        if (slope < -2.4) {direction.put(ant.id, Direction.NORTH); return;}
-//      }
-//
-//      if (xdiff <= 0 && ydiff > 0)
-//      {
-//        if (slope >= -.4) {direction.put(ant.id, Direction.WEST); return;}
-//        if (slope >= -2.4 && slope < -.4) {direction.put(ant.id, Direction.SOUTHWEST); return;}
-//        if (slope < -2.4) {direction.put(ant.id, Direction.SOUTH); return;}
-//      }
-//
-//      if (xdiff <= 0 && ydiff < 0)
-//      {
-//        if (slope <= .4) {direction.put(ant.id, Direction.WEST); return;}
-//        if (slope <= 2.4 && slope > .4) {direction.put(ant.id, Direction.NORTHWEST); return;}
-//        if (slope > 2.4) {direction.put(ant.id, Direction.NORTH); return;}
-//      }
-
     if (xdiff >= 0 && ydiff > 0)
     {
-      if (slope <= 1) {direction.put(ant.id, Direction.EAST); return;}
-      if (slope > 1) {direction.put(ant.id, Direction.SOUTH); return;}
+      if (slope <= .4)
+      {
+        direction.put(ant.id, Direction.EAST);
+        return;
+      }
+      if (slope <= 2.4 && slope > .4)
+      {
+        direction.put(ant.id, Direction.SOUTHEAST);
+        return;
+      }
+      if (slope > 2.4)
+      {
+        direction.put(ant.id, Direction.SOUTH);
+        return;
+      }
     }
 
     if (xdiff >= 0 && ydiff < 0)
     {
-      if (slope >= -1) {direction.put(ant.id, Direction.EAST); return;}
-      if (slope < -1) {direction.put(ant.id, Direction.NORTH); return;}
+      if (slope >= -.4)
+      {
+        direction.put(ant.id, Direction.EAST);
+        return;
+      }
+      if (slope >= -2.4 && slope < -.4)
+      {
+        direction.put(ant.id, Direction.NORTHEAST);
+        return;
+      }
+      if (slope < -2.4)
+      {
+        direction.put(ant.id, Direction.NORTH);
+        return;
+      }
     }
 
     if (xdiff <= 0 && ydiff > 0)
     {
-      if (slope >= -1) {direction.put(ant.id, Direction.WEST); return;}
-      if (slope < -1) {direction.put(ant.id, Direction.SOUTH); return;}
+      if (slope >= -.4)
+      {
+        direction.put(ant.id, Direction.WEST);
+        return;
+      }
+      if (slope >= -2.4 && slope < -.4)
+      {
+        direction.put(ant.id, Direction.SOUTHWEST);
+        return;
+      }
+      if (slope < -2.4)
+      {
+        direction.put(ant.id, Direction.SOUTH);
+        return;
+      }
     }
 
     if (xdiff <= 0 && ydiff < 0)
     {
-      if (slope <= 1) {direction.put(ant.id, Direction.WEST); return;}
-      if (slope > 1) {direction.put(ant.id, Direction.NORTH); return;}
+      if (slope <= .4)
+      {
+        direction.put(ant.id, Direction.WEST);
+        return;
+      }
+      if (slope <= 2.4 && slope > .4)
+      {
+        direction.put(ant.id, Direction.NORTHWEST);
+        return;
+      }
+      if (slope > 2.4)
+      {
+        direction.put(ant.id, Direction.NORTH);
+        return;
+      }
     }
-      System.out.println("Didn't choose. SLOPE: " + slope + " x: " + xdiff + " y: " + ydiff);
+
+//    if (xdiff >= 0 && ydiff > 0)
+//    {
+//      if (slope <= 1) {direction.put(ant.id, Direction.EAST); return;}
+//      if (slope > 1) {direction.put(ant.id, Direction.SOUTH); return;}
+//    }
+//
+//    if (xdiff >= 0 && ydiff < 0)
+//    {
+//      if (slope >= -1) {direction.put(ant.id, Direction.EAST); return;}
+//      if (slope < -1) {direction.put(ant.id, Direction.NORTH); return;}
+//    }
+//
+//    if (xdiff <= 0 && ydiff > 0)
+//    {
+//      if (slope >= -1) {direction.put(ant.id, Direction.WEST); return;}
+//      if (slope < -1) {direction.put(ant.id, Direction.SOUTH); return;}
+//    }
+//
+//    if (xdiff <= 0 && ydiff < 0)
+//    {
+//      if (slope <= 1) {direction.put(ant.id, Direction.WEST); return;}
+//      if (slope > 1) {direction.put(ant.id, Direction.NORTH); return;}
+//    }
+    System.out.println("Didn't choose. SLOPE: " + slope + " x: " + xdiff + " y: " + ydiff);
   }
 
   public void normalDirectionChange(AntData ant)
   {
-    Direction[] d = new Direction[5];
+    Direction[] d = new Direction[3];
     d[0] = direction.get(ant.id);
     d[1] = Direction.getLeftDir(d[0]);
     d[2] = Direction.getRightDir(d[0]);
-    d[3] = Direction.getLeftDir(d[2]);
-    d[4] = Direction.getRightDir(d[1]);
 
-    direction.replace(ant.id, d[Constants.random.nextInt(5)]);
+    direction.replace(ant.id, d[Constants.random.nextInt(3)]);
+//    direction.replace(ant.id, getDirection(ant));
   }
 
   public void waterDirectionChange(AntData ant)
@@ -178,6 +225,7 @@ public class SemiRandomWalk
       if (Graph.getLandType(ant.gridX + m, ant.gridY + n) == LandType.WATER)
       {
         possible.remove(Coordinate.getDirection(m, n));
+
         collision = true;
       }
     }
@@ -185,7 +233,14 @@ public class SemiRandomWalk
     if(collision == true)
     {
       // remove going back
-      possible.remove(Direction.getLeftDir(Direction.getLeftDir(direction.get(ant.id))));
+      Direction back = Direction.getLeftDir(Direction.getLeftDir(direction.get(ant.id)));
+      if(possible.contains(back)) possible.remove(back);
+      if(possible.contains(Direction.getLeftDir(back))) possible.remove(Direction.getLeftDir(back));
+      if(possible.contains(Direction.getRightDir(back))) possible.remove(Direction.getRightDir(back));
+//      Direction left = Direction.getLeftDir(direction.get(ant.id));
+//      if(possible.contains(left)) possible.remove(left);
+//      Direction furtherleft = Direction.getLeftDir(left);
+//      if(possible.contains(furtherleft)) possible.remove(furtherleft);
       direction.replace(ant.id, possible.get(Constants.random.nextInt(possible.size())));
     }
   }
@@ -198,5 +253,6 @@ public class SemiRandomWalk
   public Direction getDirection(AntData ant)
   {
     return distributions.get(direction.get(ant.id)).get(Constants.random.nextInt(50));
+    //return direction.get(ant.id);
   }
 }
