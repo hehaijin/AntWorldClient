@@ -38,11 +38,12 @@ public class Graph
 
     int[] connections = new int[9]; // for the edges.
 
+    // TODO do we need this info?
     int cost_so_far; // cost from the source so far.
     int cost_estimate; // estimation for remaining cost to reach the
                        // destination.
     Node pre; // a pointer to previous Node in the path.
-    int color; // color indicating the node is visited or not. 1 for not
+    short color; // color indicating the node is visited or not. 1 for not
                // visited. -1 for processed. 0 for in the frontier.
 
     public Node(LandType landtype, int height, int x, int y)
@@ -80,7 +81,6 @@ public class Graph
   private static int worldWidth = 5000;
   private static int worldHeight = 2500;
 
-//public for collision detection
   private static Node[][] world = new Node[worldWidth][worldHeight];
 
 
@@ -176,8 +176,6 @@ public class Graph
     int starty=start.y;
     int endx=end.x;
     int endy=end.y;
-
-
 
     Nodeinfo[][] runinfo=new Nodeinfo[worldWidth][worldHeight];
 
@@ -332,9 +330,6 @@ public class Graph
     {
       System.out.println(p.getNext());
     }
-
-
-
 
   }
 

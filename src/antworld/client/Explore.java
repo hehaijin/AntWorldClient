@@ -9,8 +9,22 @@ import java.util.HashMap;
  * This class creates normal distributions for moving in a semi-random direction.
  * Created by Hector on 12/7/16.
  */
-public class SemiRandomWalk
+public class Explore
 {
+  private class Vertex
+  {
+    Coordinate co;
+    boolean visited = false;
+    ArrayList<Vertex> adjacent = new ArrayList<>();
+    HashMap<Vertex, Path> paths = new HashMap<>();
+
+    public Vertex(int x, int y)
+    {
+      co = new Coordinate(x,y);
+    }
+  }
+
+  Graph graph;
   // normal distribution, makes it more likely to move in the named direction
   private ArrayList<Direction> north; // w, nw, N, ne, e
   private ArrayList<Direction> south; // e, se, S, sw, w
@@ -21,6 +35,10 @@ public class SemiRandomWalk
   private ArrayList<Direction> southwest; // se, s, SW, w, nw
   private ArrayList<Direction> southeast; // ne, e, SE, s, sw
 
+//  private ArrayList<>
+
+  private Vertex[][] vertices;
+
   private ArrayList<Direction> possible = new ArrayList<>(8);
 
   private HashMap<Integer, Integer> numCollisions = new HashMap<>();
@@ -28,7 +46,7 @@ public class SemiRandomWalk
 
   private HashMap<Integer, Direction> direction = new HashMap<>();
 
-  public SemiRandomWalk(CommData data, NestNameEnum nestName)
+  public Explore(Graph graph)
   {
 
     north = distribute(Direction.NORTH);
@@ -59,10 +77,7 @@ public class SemiRandomWalk
     possible.add(Direction.SOUTHEAST);
     possible.add(Direction.SOUTHWEST);
 
-    for(AntData ant : data.myAntList)
-    {
-      numCollisions.put(ant.id, 0);
-    }
+    this.graph = graph;
   }
 
   /**
@@ -78,9 +93,9 @@ public class SemiRandomWalk
     Direction middleLeft = Direction.getRightDir(left);
     Direction middleRight = Direction.getLeftDir(right);
 
-    for(int i = 0; i < 24; i++) distribution.add(one);
-    for(int i = 0; i < 11; i++) distribution.add(middleLeft);
-    for(int i = 0; i < 11; i++) distribution.add(middleRight);
+    for(int i = 0; i < 30; i++) distribution.add(one);
+    for(int i = 0; i < 8; i++) distribution.add(middleLeft);
+    for(int i = 0; i < 8; i++) distribution.add(middleRight);
     for(int i = 0; i < 2; i++) distribution.add(right);
     for(int i = 0; i < 2; i++) distribution.add(left);
 
@@ -99,105 +114,105 @@ public class SemiRandomWalk
     if (ydiff == 0) ydiff = 1;
     double slope = xdiff / ydiff;
 
-    if (xdiff >= 0 && ydiff > 0)
-    {
-      if (slope <= .4)
-      {
-        direction.put(ant.id, Direction.EAST);
-        return;
-      }
-      if (slope <= 2.4 && slope > .4)
-      {
-        direction.put(ant.id, Direction.SOUTHEAST);
-        return;
-      }
-      if (slope > 2.4)
-      {
-        direction.put(ant.id, Direction.SOUTH);
-        return;
-      }
-    }
-
-    if (xdiff >= 0 && ydiff < 0)
-    {
-      if (slope >= -.4)
-      {
-        direction.put(ant.id, Direction.EAST);
-        return;
-      }
-      if (slope >= -2.4 && slope < -.4)
-      {
-        direction.put(ant.id, Direction.NORTHEAST);
-        return;
-      }
-      if (slope < -2.4)
-      {
-        direction.put(ant.id, Direction.NORTH);
-        return;
-      }
-    }
-
-    if (xdiff <= 0 && ydiff > 0)
-    {
-      if (slope >= -.4)
-      {
-        direction.put(ant.id, Direction.WEST);
-        return;
-      }
-      if (slope >= -2.4 && slope < -.4)
-      {
-        direction.put(ant.id, Direction.SOUTHWEST);
-        return;
-      }
-      if (slope < -2.4)
-      {
-        direction.put(ant.id, Direction.SOUTH);
-        return;
-      }
-    }
-
-    if (xdiff <= 0 && ydiff < 0)
-    {
-      if (slope <= .4)
-      {
-        direction.put(ant.id, Direction.WEST);
-        return;
-      }
-      if (slope <= 2.4 && slope > .4)
-      {
-        direction.put(ant.id, Direction.NORTHWEST);
-        return;
-      }
-      if (slope > 2.4)
-      {
-        direction.put(ant.id, Direction.NORTH);
-        return;
-      }
-    }
-
 //    if (xdiff >= 0 && ydiff > 0)
 //    {
-//      if (slope <= 1) {direction.put(ant.id, Direction.EAST); return;}
-//      if (slope > 1) {direction.put(ant.id, Direction.SOUTH); return;}
+//      if (slope <= .4)
+//      {
+//        direction.put(ant.id, Direction.EAST);
+//        return;
+//      }
+//      if (slope <= 2.4 && slope > .4)
+//      {
+//        direction.put(ant.id, Direction.SOUTHEAST);
+//        return;
+//      }
+//      if (slope > 2.4)
+//      {
+//        direction.put(ant.id, Direction.SOUTH);
+//        return;
+//      }
 //    }
 //
 //    if (xdiff >= 0 && ydiff < 0)
 //    {
-//      if (slope >= -1) {direction.put(ant.id, Direction.EAST); return;}
-//      if (slope < -1) {direction.put(ant.id, Direction.NORTH); return;}
+//      if (slope >= -.4)
+//      {
+//        direction.put(ant.id, Direction.EAST);
+//        return;
+//      }
+//      if (slope >= -2.4 && slope < -.4)
+//      {
+//        direction.put(ant.id, Direction.NORTHEAST);
+//        return;
+//      }
+//      if (slope < -2.4)
+//      {
+//        direction.put(ant.id, Direction.NORTH);
+//        return;
+//      }
 //    }
 //
 //    if (xdiff <= 0 && ydiff > 0)
 //    {
-//      if (slope >= -1) {direction.put(ant.id, Direction.WEST); return;}
-//      if (slope < -1) {direction.put(ant.id, Direction.SOUTH); return;}
+//      if (slope >= -.4)
+//      {
+//        direction.put(ant.id, Direction.WEST);
+//        return;
+//      }
+//      if (slope >= -2.4 && slope < -.4)
+//      {
+//        direction.put(ant.id, Direction.SOUTHWEST);
+//        return;
+//      }
+//      if (slope < -2.4)
+//      {
+//        direction.put(ant.id, Direction.SOUTH);
+//        return;
+//      }
 //    }
 //
 //    if (xdiff <= 0 && ydiff < 0)
 //    {
-//      if (slope <= 1) {direction.put(ant.id, Direction.WEST); return;}
-//      if (slope > 1) {direction.put(ant.id, Direction.NORTH); return;}
+//      if (slope <= .4)
+//      {
+//        direction.put(ant.id, Direction.WEST);
+//        return;
+//      }
+//      if (slope <= 2.4 && slope > .4)
+//      {
+//        direction.put(ant.id, Direction.NORTHWEST);
+//        return;
+//      }
+//      if (slope > 2.4)
+//      {
+//        direction.put(ant.id, Direction.NORTH);
+//        return;
+//      }
 //    }
+
+    if (xdiff >= 0 && ydiff > 0)
+    {
+      if (slope <= 1) {direction.put(ant.id, Direction.EAST); return;}
+      if (slope > 1) {direction.put(ant.id, Direction.SOUTH); return;}
+    }
+
+    if (xdiff >= 0 && ydiff < 0)
+    {
+      if (slope >= -1) {direction.put(ant.id, Direction.EAST); return;}
+      if (slope < -1) {direction.put(ant.id, Direction.NORTH); return;}
+    }
+
+    if (xdiff <= 0 && ydiff > 0)
+    {
+      if (slope >= -1) {direction.put(ant.id, Direction.WEST); return;}
+      if (slope < -1) {direction.put(ant.id, Direction.SOUTH); return;}
+    }
+
+    if (xdiff <= 0 && ydiff < 0)
+    {
+      if (slope <= 1) {direction.put(ant.id, Direction.WEST); return;}
+      if (slope > 1) {direction.put(ant.id, Direction.NORTH); return;}
+    }
     System.out.println("Didn't choose. SLOPE: " + slope + " x: " + xdiff + " y: " + ydiff);
   }
 
@@ -244,6 +259,69 @@ public class SemiRandomWalk
       direction.replace(ant.id, possible.get(Constants.random.nextInt(possible.size())));
     }
   }
+
+  public void genVertices()
+  {
+    int xTotal = 5000/AIconstants.BLOCK_SIZE;
+    int yTotal = 2500/AIconstants.BLOCK_SIZE;
+
+    vertices = new Vertex[xTotal][yTotal];
+
+    for(int col = 0; col < xTotal; col++)
+    {
+      for(int row = 0; row < yTotal; row++)
+      {
+        if(Graph.getLandType((col+1)*AIconstants.BLOCK_SIZE, (row+1)*AIconstants.BLOCK_SIZE) == LandType.GRASS)
+        {
+          vertices[col][row] = new Vertex((col + 1) * AIconstants.BLOCK_SIZE, (row + 1) * AIconstants.BLOCK_SIZE);
+        }
+      }
+    }
+
+    for(int col = 0; col < xTotal; col++)
+    {
+      for (int row = 0; row < yTotal; row++)
+      {
+        if(vertices[col][row] != null)
+        {
+          genAdjacency(vertices[col][row], col, row);
+        }
+      }
+    }
+
+    Vertex v0;
+    for(int col = 0; col < xTotal; col++)
+    {
+      for (int row = 0; row < yTotal; row++)
+      {
+        v0 = vertices[col][row];
+        for(Vertex v1 : v0.adjacent)
+        {
+           v0.paths.put(v1, graph.findPath(v0.co.getX(), v0.co.getY(), v1.co.getX(), v1.co.getY()));
+        }
+      }
+    }
+  }
+
+  private void genAdjacency(Vertex v, int col, int row)
+  {
+    for(int i = 0; i < 9; i++)
+    {
+      int m = i / 3 - 1;
+      int n = i % 3 - 1;
+
+      if(v.co.getX() + AIconstants.BLOCK_SIZE*m < 5000 && v.co.getX() + AIconstants.BLOCK_SIZE*m >= 0
+              && v.co.getY() + AIconstants.BLOCK_SIZE*n < 2500 && v.co.getY() + AIconstants.BLOCK_SIZE*n >= 0)
+      {
+        if(vertices[col+m][row+n] != null)
+        {
+          v.adjacent.add(vertices[col+m][row+n]);
+        }
+      }
+    }
+  }
+
+
 
   /**
    * Gets random direction for the ant to go too

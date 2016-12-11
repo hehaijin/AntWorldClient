@@ -122,9 +122,9 @@ public class WaterLocations
       minDist = 10000;
       for(Coordinate c : water)
       {
-        if(Coordinate.getDistance(c.getX(),c.getY(),nest.centerX, nest.centerY) < minDist)
+        if(Coordinate.manhattanDistance(c.getX(),c.getY(),nest.centerX, nest.centerY) < minDist)
         {
-          minDist = Coordinate.getDistance(c, new Coordinate(nest.centerX, nest.centerY));
+          minDist = Coordinate.linearDistance(c, new Coordinate(nest.centerX, nest.centerY));
           temp[nest.nestName.ordinal()] = c;
         }
       }
@@ -138,22 +138,33 @@ public class WaterLocations
     return nearestSources;
   }
 
-  private void makePath()
+  private Coordinate waterLocation(NestNameEnum myNest)
   {
     String line;
     String[] split;
+    Path sp;
+    int nestNum;
+
     try
     {
       BufferedReader read = new BufferedReader(Files.newBufferedReader(Paths.get("waterLocations.txt")));
       while((line = read.readLine()) != null)
       {
         split = line.split(" ");
+        nestNum = Integer.valueOf(split[0]);
+        if(nestNum == myNest.ordinal());
+        {
+          int x = Integer.valueOf(split[3]);
+          int y = Integer.valueOf(split[4]);
+          return new Coordinate(x,y);
+        }
       }
     }
     catch(IOException e)
     {
       System.out.println(e);
     }
+    return null;
   }
 
   private boolean isGrass(Node[][] world, int x, int y)

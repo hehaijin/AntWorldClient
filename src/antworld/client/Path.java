@@ -59,8 +59,8 @@ public class Path
     int dirX = xdiff/xdiff_abs;
     int dirY = ydiff/ydiff_abs;
     Direction diag = Coordinate.getDirection(dirX, dirY);
-    Direction straightX = Coordinate.getDirectionX(xdiff);
-    Direction straightY = Coordinate.getDirectionY(ydiff);
+    Direction straightX = Coordinate.getXDirection(xdiff);
+    Direction straightY = Coordinate.getYDirection(ydiff);
 
     int max = Math.max(xdiff_abs, xdiff_abs);
 

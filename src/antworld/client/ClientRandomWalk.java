@@ -3,11 +3,8 @@ package antworld.client;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
@@ -16,7 +13,6 @@ import java.util.concurrent.Executors;
 
 import antworld.common.*;
 import antworld.common.AntAction.AntActionType;
-import antworld.client.Coordinate;
 
 public class ClientRandomWalk
 {
@@ -28,17 +24,13 @@ public class ClientRandomWalk
   private boolean isConnected = false;
   private NestNameEnum myNestName = null;
   private int centerX, centerY;
-  private SemiRandomWalk walk;
+  private Explore walk;
   private boolean firstRun = true;
   private int changeDir = 1;
 
-  private Graph graph;
-  
-  
-
   private Socket clientSocket;
 
-  
+
   private Graph world=new Graph();
   private static ArrayList<Coordinate> foodLocations = new ArrayList<>();
 
@@ -48,6 +40,7 @@ public class ClientRandomWalk
   // TODO hashmaps are unsynchronized by nature, it's possible they need to be synchronized
   private HashMap<Integer,FoodType> desiredFood = new HashMap<>(); // stores the desired food of the ant.
   private HashMap<Integer, Boolean> attacked = new HashMap<>();
+  private HashMap<Integer, Integer> distanceFromNest = new HashMap<>();
 
   private ArrayList<Path> foodPath = new ArrayList<>(); // stores paths to food from colony
   private ArrayList<Path> waterPath = new ArrayList<>(); // stores paths to water from colony
@@ -105,7 +98,21 @@ public class ClientRandomWalk
     
   }
   
-  
+//  private boolean updateDistanceFromNest(CommData data)
+//  {
+//    int x = data.nestData[data.myNest.ordinal()].centerX;
+//    int y = data.nestData[data.myNest.ordinal()].centerY;
+//    int totalDistance = 0;
+//    int max = 0;
+//    int dist;
+//
+//    for(AntData ant : data.myAntList)
+//    {
+//      dist = Coordinate.manhattanDistance(x,y,ant.gridX,ant.gridY);
+//      if(dist > max) max = dist;
+//      totalDistance += dist;
+//    }
+//  }
   
   
   
@@ -118,9 +125,12 @@ public class ClientRandomWalk
     System.out.println("Starting " + team +" on " + host + ":" + portNumber + " at "
       + System.currentTimeMillis());
 
-    preCalculate();
     isConnected = openConnection(host, portNumber);
     if (!isConnected) System.exit(0);
+
+    // TODO perform this on separate thread?
+    walk = new Explore(world);
+
     CommData data = obtainNest();
 
     // for detecting nearest water locations, should not be runned most of the time
@@ -129,14 +139,8 @@ public class ClientRandomWalk
 //    water.waterLocations = water.reduce(data, water.waterLocations);
 //    water.write(data);
 
-    walk = new SemiRandomWalk(data, myNestName);
     mainGameLoop(data);
     closeAll();
-  }
-
-  private void preCalculate()
-  {
-    graph = new Graph();
   }
 
   private boolean openConnection(String host, int portNumber)
@@ -255,7 +259,6 @@ public class ClientRandomWalk
 
         if (DEBUG) System.out.println("antworld.client.ClientRandomWalk: chooseActions: " + myNestName);
 
-        //checkCollisions(data);
         findResources(data);
         chooseActionsOfAllAnts(data);
 
@@ -368,8 +371,6 @@ public class ClientRandomWalk
   
   public void checkAndDispatchFoodAnts(CommData commData)
   {
-    
-    
     //dispatch food ants
     for(FoodData fd: foodSiteAnts.keySet())
     {
@@ -410,7 +411,7 @@ public class ClientRandomWalk
     Coordinate c0=new Coordinate(ant0.gridX, ant0.gridY);
     for(AntData ant: ants)
     {
-      if(Coordinate.getDistance(new Coordinate(ant.gridX, ant.gridY), c0)<= AIconstants.groupRadius)
+      if(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), c0)<= AIconstants.groupRadius)
       {
         group.add(ant);
         ants.remove(ant);
@@ -423,7 +424,6 @@ public class ClientRandomWalk
     {
       Path p=Path.straightLine(ant.gridX, ant.gridY, ant0.gridX, ant0.gridY);
       allpaths.put(ant.id, p);
-   
     }
     
     pool.submit(new SPCalculator(group, ant0.gridX,ant0.gridY,co1.getX(),co1.getY()));
@@ -452,14 +452,14 @@ public class ClientRandomWalk
     for(Integer id: freeAnts )
     {
       AntData ant=getAntbyId(data, id);
-      dist.add(Coordinate.getDistance(new Coordinate(ant.gridX, ant.gridY), co));
+      dist.add(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co));
     }
     Collections.sort(dist);
     int range=dist.get(n-1);    
     for(Integer id: freeAnts )
     {
       AntData ant=getAntbyId(data, id);
-      if(Coordinate.getDistance(new Coordinate(ant.gridX, ant.gridY), co)<= range)
+      if(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co)<= range)
       {
         ants.add(ant);
       }
@@ -673,7 +673,7 @@ public class ClientRandomWalk
       foodData = food;
       int spaceleft = 0;
       // dont want to pick up water and a medic should only have water to be useful
-      if(food.foodType != FoodType.WATER && ant.antType != AntType.MEDIC)
+      if(ant.antType != AntType.MEDIC)
       {
         // ant has no food or the ant has this type of food and space for it
         if (ant.carryType == null || (food.foodType == ant.carryType && ant.carryUnits < ant.antType.getCarryCapacity()))

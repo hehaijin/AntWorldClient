@@ -2,8 +2,6 @@ package antworld.client;
 
 import antworld.common.Direction;
 
-import java.util.Objects;
-
 /**
  * This class stores coordinates, does math with them.
  * NOTE: to calculate direction the functions need the difference in x and y coordinates.
@@ -44,9 +42,14 @@ public class Coordinate
    * @param y2 coordinate of second item
    * @return manhattan distance
    */
-  public static int getDistance(int x1, int y1, int x2, int y2)
+  public static int manhattanDistance(int x1, int y1, int x2, int y2)
   {
     return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+  }
+
+  public static int manhattanDistance(Coordinate c1, Coordinate c2)
+  {
+    return manhattanDistance(c1.getX(), c1.getY(), c2.getX(), c2.getY());
   }
 
   @Override
@@ -90,29 +93,29 @@ public class Coordinate
     return getDirection(cell.getX() - ant.getX(), cell.getY() - ant.getY());
   }
 
-  public static Direction getDirectionX(Coordinate cell, Coordinate ant)
+  public static Direction getXDirection(Coordinate cell, Coordinate ant)
   {
-    return getDirectionX(cell.getX() - ant.getX());
+    return getXDirection(cell.getX() - ant.getX());
   }
 
-  public static Direction getDirectionY(Coordinate cell, Coordinate ant)
+  public static Direction getYDirection(Coordinate cell, Coordinate ant)
   {
-    return getDirectionX(cell.getY() - ant.getY());
+    return getYDirection(cell.getY() - ant.getY());
   }
 
-  public static Direction getDirectionX(int xdiff)
+  public static Direction getXDirection(int xdiff)
   {
     if(xdiff < 0) return Direction.EAST;
     return Direction.WEST;
   }
 
-  public static Direction getDirectionY(int ydiff)
+  public static Direction getYDirection(int ydiff)
   {
     if(ydiff < 0) return Direction.SOUTH;
     return Direction.NORTH;
   }
 
-  public static int getDistance(Coordinate co1, Coordinate co2)
+  public static int linearDistance(Coordinate co1, Coordinate co2)
   {
     return Math.max(Math.abs(co1.getX()-co2.getX()), Math.abs(co1.getY()-co2.getY()));
   }
