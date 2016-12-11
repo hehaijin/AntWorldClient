@@ -12,6 +12,16 @@ public class Path
     return path.pop();
   }
 
+  public Path deepCopy()
+  {
+    Path newPath = new Path();
+    for(int i = 0; i < this.path.size(); i++)
+    {
+      newPath.add(this.path.get(i));
+    }
+    return newPath;
+  }
+
   /**
    * add to the path in reverse sequence.
    * 
@@ -34,7 +44,6 @@ public class Path
       Direction d=p.path.getFirst(); 
       path.addLast(d);
     }
- 
   }
   
   void addPathToHead(Path p)
@@ -44,10 +53,9 @@ public class Path
       Direction d=p.path.getLast();
       path.addFirst(d);
     }
-    
-    
   }
 
+  // TODO water check
   public static Path straightLine(int startX, int startY, int endX, int endY)
   {
     Path line = new Path();

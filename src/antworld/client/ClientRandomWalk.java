@@ -24,7 +24,7 @@ public class ClientRandomWalk
   private boolean isConnected = false;
   private NestNameEnum myNestName = null;
   private int centerX, centerY;
-  private Explore walk;
+  private ExplorationManager walk;
   private boolean firstRun = true;
   private int changeDir = 1;
 
@@ -113,11 +113,6 @@ public class ClientRandomWalk
 //      totalDistance += dist;
 //    }
 //  }
-  
-  
-  
-  
-
 
   public ClientRandomWalk(String host, int portNumber, TeamNameEnum team)
   {
@@ -129,7 +124,7 @@ public class ClientRandomWalk
     if (!isConnected) System.exit(0);
 
     // TODO perform this on separate thread?
-    walk = new Explore(world);
+//    walk = new ExplorationManager(world);
 
     CommData data = obtainNest();
 
@@ -580,7 +575,6 @@ public class ClientRandomWalk
       action.type = AntActionType.EXIT_NEST;
       action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
       action.y = centerY - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
-      walk.determineDirection(data, ant, action.x, action.y, centerX, centerY);
       return true;
     }
     return false;
@@ -814,7 +808,7 @@ public class ClientRandomWalk
   private boolean goExplore(CommData data, AntData ant, AntAction action)
   {
 //    System.out.println("EXPLORE");
-    Direction dir = walk.getDirection(ant);
+    Direction dir = Direction.getRandomDir();
     //Direction dir = Direction.NORTH;
     action.type = AntActionType.MOVE;
     action.direction = dir;
@@ -825,11 +819,6 @@ public class ClientRandomWalk
   private AntAction chooseAction(CommData data, AntData ant)
   {
     AntAction action = new AntAction(AntActionType.STASIS);
-
-    if(changeDir == AIconstants.CHANGE_DIR_TICK)
-    {
-      walk.normalDirectionChange(ant);
-    }
 
     if (ant.ticksUntilNextAction > 0) return ant.myAction;
 
@@ -850,9 +839,6 @@ public class ClientRandomWalk
 //    if (goToFood(data, ant, action)) return action;
 //
 //    if (goToGoodAnt(data, ant, action)) return action;
-
-    if(ant.myAction.type == AntActionType.STASIS) walk.waterDirectionChange(ant);
-
 
     if (goExplore(data, ant, action)) return action;
 

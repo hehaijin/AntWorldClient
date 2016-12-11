@@ -1,23 +1,13 @@
 package antworld.client;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.PriorityQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.nio.file.Paths;
-import java.util.*;
 
 import javax.imageio.ImageIO;
 
-import antworld.common.AntData;
-import antworld.common.AntType;
 import antworld.common.LandType;
 
 /**
@@ -325,12 +315,14 @@ public class Graph
 
     Graph g=new Graph();
 
-    Path p=g.findPath(300,300, 715,800);
-    while(p.hasNext())
-    {
-      System.out.println(p.getNext());
-    }
+//    Path p=g.findPath(300,300, 715,800);
+//    while(p.hasNext())
+//    {
+//      System.out.println(p.getNext());
+//    }
 
+    ExplorationManager e = new ExplorationManager(g);
+    e.genVertices();
   }
 
 }
