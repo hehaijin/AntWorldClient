@@ -4,11 +4,19 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.PriorityQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.nio.file.Paths;
 import java.util.*;
 
 import javax.imageio.ImageIO;
 
+import antworld.common.AntData;
 import antworld.common.AntType;
 import antworld.common.LandType;
 
@@ -43,15 +51,39 @@ public class Graph
       this.height = height;
       this.x = x;
       this.y = y;
-
     }
   }
 
+
+  private class Nodeinfo
+  {
+    int x, y;
+    int cost_so_far; // cost from the source so far.
+    int cost_estimate; // estimation for remaining cost to reach the
+                       // destination.
+    Nodeinfo pre; // a pointer to previous Node in the path.
+    int color; // color indicating the node is visited or not. 1 for not
+               // visited. -1 for processed. 0 for in the frontier.
+
+    Nodeinfo(int x, int y)
+    {
+      this.x=x;
+      this.y=y;
+    }
+
+  }
+
+
+
+
+
   private static int worldWidth = 5000;
   private static int worldHeight = 2500;
-  // public for collision detection
+
+//public for collision detection
   private static Node[][] world = new Node[worldWidth][worldHeight];
-  ArrayList<Coordinate> c = new ArrayList<>();
+
+
 
   public Graph()
   {
@@ -69,6 +101,7 @@ public class Graph
     {
       for (int y = 0; y < worldHeight; y++)
       {
+
         int rgb = (image.getRGB(x, y) & 0x00FFFFFF);
         LandType landType;
         int height = 0;
@@ -96,9 +129,6 @@ public class Graph
     System.out.println("now calculating edges");
     calculateEdges();
   }
-
-  public static LandType getLandType(int x, int y) {return world[x][y].landtype;}
-
 
   public Node getNode(int x, int y)
   {
@@ -140,7 +170,33 @@ public class Graph
 
   public Path findPath(Node start, Node end)
   {
+
     long t1 = System.currentTimeMillis();
+    int startx=start.x;
+    int starty=start.y;
+    int endx=end.x;
+    int endy=end.y;
+
+
+
+    Nodeinfo[][] runinfo=new Nodeinfo[worldWidth][worldHeight];
+
+    for (int x = 0; x < worldWidth; x++)
+    {
+      for (int y = 0; y < worldHeight; y++)
+      {
+        runinfo[x][y]=new Nodeinfo(x,y);
+        runinfo[x][y].cost_estimate = Integer.MAX_VALUE;
+        runinfo[x][y].cost_so_far = Integer.MAX_VALUE;
+        runinfo[x][y].color = 1;
+        runinfo[x][y].pre = null;
+      }
+    }
+
+
+
+
+
     int s = 0;
     int t = 0;
 
@@ -157,50 +213,50 @@ public class Graph
     if (t == 0)
       System.out.println("no path to end");
 
-    initiateGraph();
-    start.color = 0;
-    start.cost_so_far = 0;
-    PriorityQueue<Node> frontier = new PriorityQueue<>(100, new Comparator<Node>()
+  //  initiateGraph();
+    runinfo[startx][starty].color = 0;
+    runinfo[startx][starty].cost_so_far = 0;
+    PriorityQueue<Nodeinfo> frontier = new PriorityQueue<>(100, new Comparator<Nodeinfo>()
     {
 
       @Override
-      public int compare(Node o1, Node o2)
+      public int compare(Nodeinfo o1, Nodeinfo o2)
       {
         // TODO Auto-generated method stub
         return o1.cost_so_far + o1.cost_estimate - o2.cost_so_far - o2.cost_estimate;
       }
     });
 
-    frontier.offer(start);
+    frontier.offer(runinfo[startx][starty]);
 
     System.out.println("start calculating path");
     loop: while (frontier.size() > 0)
     {
-      Node u = frontier.poll();
+      Nodeinfo u = frontier.poll();
 
       for (int i = 0; i < 9; i++)
       {
 
-        if (u.connections[i] > 0)
+        if (world[u.x][u.y].connections[i] > 0)
         {
           int m = i / 3 - 1;
           int n = i % 3 - 1;
 
-          Node v = world[u.x + m][u.y + n];
+          Nodeinfo v = runinfo[u.x + m][u.y + n];
           if (v.color == 1)
           {
             v.color = 0;
-            if (v.cost_so_far > u.cost_so_far + u.connections[i])
+            if (v.cost_so_far > u.cost_so_far + world[u.x][u.y].connections[i])
             {
-              v.cost_so_far = u.cost_so_far + u.connections[i];
-              v.cost_estimate = v.cost_so_far + costestimate(v, end);
+              v.cost_so_far = u.cost_so_far + world[u.x][u.y].connections[i];
+              v.cost_estimate = v.cost_so_far + costestimate(v, runinfo[end.x][end.y]);
             }
             v.pre = u;
             frontier.offer(v);
             // System.out.println("adding Node "+v.x+ " "+ v.y+ " to the
             // frountier");
           }
-          if (v == end)
+          if (v.x == end.x && v.y==end.y)
             break loop;
         }
 
@@ -210,63 +266,19 @@ public class Graph
 
     // adding nodes to the path
     Path path = new Path();
-    Node p = end;
-    Node pre = end.pre;
-    path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
-
-
-    c.add(c.size(), new Coordinate(p.x, p.y));
-    c.add(c.size(), new Coordinate(pre.x, pre.y));
-
-    while (p.pre.pre != null)
+    Nodeinfo p = runinfo[end.x][end.y];
+    Nodeinfo pre = p.pre;
+   // path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
+    while (p.pre != null)
     {
+      path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
       p = pre;
       pre = p.pre;
-      c.add(c.size() - 1, new Coordinate(p.x, p.y));
-      c.add(c.size() - 1, new Coordinate(pre.x, pre.y));
-      path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
+
     }
     System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
-
-    drawPath();
-
     return path;
 
-  }
-
-  private void drawPath()
-  {
-    BufferedImage image = null;
-    try
-    {
-      image = ImageIO.read(new File("resources/test.png"));
-    } catch (IOException ie)
-    {
-      System.out.println("image load failure");
-    }
-    System.out.println("loading the picture done");
-
-    for (int x = 0; x < worldWidth; x++)
-    {
-      for (int y = 0; y < worldHeight; y++)
-      {
-        if(c.contains(new Coordinate(x,y)))
-        {
-          image.setRGB(x,y,0xFF0000);
-        }
-      }
-    }
-    try
-    {
-      File outputfile = new File("saved.png");
-      ImageIO.write(image, "png", outputfile);
-    }
-    catch(IOException e)
-    {
-      System.out.println(e);
-    }
-
-    System.out.println("now calculating edges");
   }
 
   public void initiateGraph()
@@ -283,22 +295,47 @@ public class Graph
         world[x][y].pre = null;
       }
     }
-
-    // System.out.println("it takes "+ (System.currentTimeMillis()-t1)+"ms");
+   // System.out.println("it takes "+ (System.currentTimeMillis()-t1)+"ms");
 
   }
 
-  public int costestimate(Node start, Node end)
+
+
+
+ public Path findPath(int startx, int starty, int endx, int endy)
+ {
+
+   return findPath(getNode(startx,starty),getNode(endx,endy));
+
+ }
+
+
+
+  public int costestimate(Nodeinfo start, Nodeinfo end)
   {
     return Math.max(Math.abs(start.x - end.x), Math.abs(start.y - end.y));
   }
 
+
+  public static LandType getLandType(int x, int y) {return world[x][y].landtype;}
+
+
+
   public static void main(String[] args)
   {
     // TODO Auto-generated method stub
-    Graph g = new Graph();
-    System.out.println(g.findPath(g.getNode(300, 300), g.getNode(4550, 2190)).size());
-//    System.out.println(g.findPath(g.getNode(300, 300), g.getNode(500, 500)).size());
+
+    Graph g=new Graph();
+
+    Path p=g.findPath(300,300, 715,800);
+    while(p.hasNext())
+    {
+      System.out.println(p.getNext());
+    }
+
+
+
+
   }
 
 }

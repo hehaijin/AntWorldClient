@@ -16,4 +16,14 @@ public class AIconstants
 
   public static final int CHANGE_DIR_TICK = 2000;
   public static final int MAX_COLLISIONS = 10;
+  
+  public static final int antsForWater=5;
+  
+  public static final int groupRadius=40;
+  public static final int groupSize=3;
+  
+  public static final int ThreadPoolSize=10;
+  
+  
+  
 }

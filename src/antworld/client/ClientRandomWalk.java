@@ -6,10 +6,13 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import antworld.common.*;
 import antworld.common.AntAction.AntActionType;
@@ -30,9 +33,13 @@ public class ClientRandomWalk
   private int changeDir = 1;
 
   private Graph graph;
+  
+  
 
   private Socket clientSocket;
 
+  
+  private Graph world=new Graph();
   private static ArrayList<Coordinate> foodLocations = new ArrayList<>();
 
   // TODO read in file and write here
@@ -47,6 +54,10 @@ public class ClientRandomWalk
   private HashMap<Integer,Path> allpaths=new HashMap<>(); // for storing shortest path.
   private HashMap<Integer,AntAction> allactions=new HashMap<>(); //used to check if current action is successful
   private HashMap<Integer,Task> alltasks=new HashMap<>();
+  private HashSet<Integer> antsForWater=new HashSet<>();
+  private HashMap<FoodData,ArrayList<Integer>> foodSiteAnts=new HashMap<>();
+  private HashSet<Integer> freeAnts=new HashSet<>();
+  
 
   private CommData previousData;
 
@@ -55,6 +66,50 @@ public class ClientRandomWalk
   //  even in every class were you want a generator.
   //
   public static Random random = Constants.random;
+  
+  
+//Thread pool for calculating shortest path.
+  ExecutorService pool=Executors.newFixedThreadPool(10);
+  
+  class SPCalculator implements Runnable
+  {
+    ArrayList<AntData> ants;
+    int startx;
+    int starty;
+    int endx;
+    int endy;
+    
+
+    public SPCalculator(ArrayList<AntData> ants, int startx, int starty,int endx, int endy)
+    {
+      this.ants=ants;
+      this.startx=startx;
+      this.starty=starty;
+      this.endx=endx;
+      this.endy=endy;
+    }
+    
+    
+    @Override
+    public void run()
+    {
+      // TODO Auto-generated method stub
+      Path p=world.findPath(startx, starty,endx,endy);
+      for(AntData ant: ants)
+      {
+       Path p1=allpaths.get(ant.id);;
+       p1.addPathToHead(p1);  
+      }
+      
+    }
+    
+  }
+  
+  
+  
+  
+  
+  
 
 
   public ClientRandomWalk(String host, int portNumber, TeamNameEnum team)
@@ -274,6 +329,13 @@ public class ClientRandomWalk
   {
     if(changeDir != AIconstants.CHANGE_DIR_TICK) ++changeDir;
     else changeDir = 0;
+    
+    checkAndDispatchWaterAnts(commData);
+    
+    
+    
+    
+    
     for (AntData ant : commData.myAntList)
     {
       AntAction action = chooseAction(commData, ant);
@@ -281,6 +343,155 @@ public class ClientRandomWalk
     }
 
   }
+  
+  
+  private void checkAndDispatchWaterAnts(CommData commData)
+  {
+    /*
+    
+    if(antsForWater.size()<AIconstants.antsForWater)
+    {
+      ArrayList<AntData> ants=getClosestFreeAnts(commData, new Coordinate(centerX, centerY), AIconstants.antsForWater-antsForWater.size());
+      //I need the water location here.
+      
+      Coordinate waterlocation=new Coordinate(1, 1);
+      dispatchTo(ants, waterlocation);
+      for(AntData ant: ants)
+      {
+        alltasks.put(ant.id, Task.GOTOWATER);
+      }
+    }
+    
+    */
+    
+  }
+  
+  public void checkAndDispatchFoodAnts(CommData commData)
+  {
+    
+    
+    //dispatch food ants
+    for(FoodData fd: foodSiteAnts.keySet())
+    {
+      if(foodSiteAnts.get(fd).size()< AIconstants.antsPerFoodPile)
+      {
+        Coordinate co=new Coordinate(fd.gridX, fd.gridY);
+        ArrayList<AntData> ants=getClosestFreeAnts(commData, co, AIconstants.antsPerFoodPile-foodSiteAnts.get(fd).size());
+        dispatchTo(ants, co);
+        for(AntData ant: ants)
+        {
+          alltasks.put(ant.id, Task.GOTOFOOD);
+        }     
+      }
+      
+    }
+    
+    
+    
+  }
+  
+  
+  
+  
+
+  /**
+   * the function get an ant from the collection randomly, then the group around it within the radius
+   * calculate a path for the group.
+   * do it recursively.
+   * @param ants
+   * @param co1
+   */
+  
+  private void dispatchTo(ArrayList<AntData> ants, Coordinate co1)
+  {
+    if(ants.size()==0) return;
+    AntData ant0=ants.get(0);
+    ArrayList<AntData> group=new ArrayList<>();
+    Coordinate c0=new Coordinate(ant0.gridX, ant0.gridY);
+    for(AntData ant: ants)
+    {
+      if(Coordinate.getDistance(new Coordinate(ant.gridX, ant.gridY), c0)<= AIconstants.groupRadius)
+      {
+        group.add(ant);
+        ants.remove(ant);
+      }
+      
+    }
+    
+    
+    for(AntData ant: group)
+    {
+      Path p=Path.straightLine(ant.gridX, ant.gridY, ant0.gridX, ant0.gridY);
+      allpaths.put(ant.id, p);
+   
+    }
+    
+    pool.submit(new SPCalculator(group, ant0.gridX,ant0.gridY,co1.getX(),co1.getY()));
+    
+    
+    //TODO here: add direct path to c0 for each ant in the group.
+    // calculate the path from c0 to co1, when done, append it to the front of each path in group.
+    
+   
+    dispatchTo(ants, co1);
+   
+  }
+  
+  /**
+   * calculates n the most closet free ants to the specific coordinate based on direct distance
+   * returns an ArrayList.
+   * @param data
+   * @param co
+   * @param n
+   * @return   n the most closet free ants
+   */
+  private ArrayList<AntData> getClosestFreeAnts(CommData data,Coordinate co, int n)
+  {
+    ArrayList<AntData> ants=new ArrayList<>();
+    ArrayList<Integer> dist=new ArrayList<>();
+    for(Integer id: freeAnts )
+    {
+      AntData ant=getAntbyId(data, id);
+      dist.add(Coordinate.getDistance(new Coordinate(ant.gridX, ant.gridY), co));
+    }
+    Collections.sort(dist);
+    int range=dist.get(n-1);    
+    for(Integer id: freeAnts )
+    {
+      AntData ant=getAntbyId(data, id);
+      if(Coordinate.getDistance(new Coordinate(ant.gridX, ant.gridY), co)<= range)
+      {
+        ants.add(ant);
+      }
+      
+    }
+  
+    return ants;
+  }
+  
+  
+  /**
+   * return an antData by id.
+   * @param data
+   * @param n
+   * @return
+   */
+  private AntData getAntbyId(CommData data,int n)
+  {
+    for(AntData ant: data.myAntList)
+    {
+      if(ant.id==n)
+        return ant;
+    }
+    return null;
+  }
+  
+  
+  
+  
+  
+  
+  
 
   private void detectAttacks(CommData data)
   {
