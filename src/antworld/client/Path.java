@@ -9,7 +9,7 @@ public class Path
 
   Direction getNext()
   {
-    return path.getLast();
+    return path.pop();
   }
 
   /**
