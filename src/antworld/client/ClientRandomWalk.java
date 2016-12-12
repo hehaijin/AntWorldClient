@@ -356,12 +356,12 @@ public class ClientRandomWalk
    
       Coordinate waterlocation=getWaterLocationForNest(commData);
 
-      dispatchTo(ants, waterlocation);
       for(AntData ant: ants)
       {
         alltasks.put(ant.id, Task.GOTOWATER);
         antsForWater.add(ant.id);
       }
+      dispatchTo(ants, waterlocation);
     }
     
     
@@ -440,6 +440,7 @@ public class ClientRandomWalk
   
   private void dispatchTo(ArrayList<AntData> ants, Coordinate co1)
   {
+    
     if(ants.size()==0) return;
     AntData ant0=ants.get(0);
     ArrayList<AntData> group=new ArrayList<>();
@@ -467,10 +468,9 @@ public class ClientRandomWalk
     
     //TODO here: add direct path to c0 for each ant in the group.
     // calculate the path from c0 to co1, when done, append it to the front of each path in group.
-    
    
     dispatchTo(ants, co1);
-   
+  
   }
   
   /**
@@ -493,7 +493,7 @@ public class ClientRandomWalk
     }
 
     Collections.sort(dist);
-    System.out.println(dist);
+   // System.out.println(dist);
     int range;
     if(dist.size()==0)
       range=0;
@@ -512,7 +512,7 @@ public class ClientRandomWalk
         if(i==n) break;
       }
     }
-    //  System.out.println("recruited "+ ants.size()+ " ants.");
+     System.out.println("recruited "+ ants.size()+ " ants.");
     return ants;
   }
 
