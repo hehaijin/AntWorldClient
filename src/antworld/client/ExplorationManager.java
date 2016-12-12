@@ -2,10 +2,7 @@ package antworld.client;
 
 import antworld.common.*;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.PriorityQueue;
+import java.util.*;
 
 /**
  * This class creates normal distributions for moving in a semi-random direction.
@@ -17,7 +14,7 @@ public class ExplorationManager
   {
     Coordinate co;
     boolean visited = false;
-    short color;
+    short color = 1;
     ArrayList<Vertex> adjacent = new ArrayList<>();
     HashMap<Vertex, Path> paths = new HashMap<>();
     int cost_so_far = Integer.MAX_VALUE;
@@ -130,19 +127,31 @@ public class ExplorationManager
 
   private Vertex findClosestVertex(Coordinate c)
   {
-    int col = c.getX();
-    int row = c.getY();
+    int x = c.getX();
+    int y = c.getY();
 
-    try
+    int col = x/AIconstants.BLOCK_SIZE;
+    int row = y/AIconstants.BLOCK_SIZE;
+
+    System.out.println(col + " " + row);
+
+    if(col >= 0 && row >= 0 && col < 5000/AIconstants.BLOCK_SIZE && row < 2500/AIconstants.BLOCK_SIZE)
     {
       if (vertices[col][row] != null) return vertices[col][row];
-      if (vertices[col + 1][row + 1] != null) return vertices[col][row];
-      if (vertices[col + 1][row] != null) return vertices[col][row];
-      if (vertices[col][row + 1] != null) return vertices[col][row];
-    } catch(IndexOutOfBoundsException e)
-    {
-      System.out.println("Index out of bounds, but it was handled");
     }
+    if(col+1 >= 0 && row+1 >= 0 && col+1 < 5000/AIconstants.BLOCK_SIZE && row+1 < 2500/AIconstants.BLOCK_SIZE)
+    {
+      if (vertices[col + 1][row + 1] != null) return vertices[col][row];
+    }
+    if(col+1 >= 0 && row >= 0 && col+1 < 5000/AIconstants.BLOCK_SIZE && row < 2500/AIconstants.BLOCK_SIZE)
+    {
+      if (vertices[col + 1][row] != null) return vertices[col][row];
+    }
+    if(col >= 0 && row+1 >= 0 && col < 5000/AIconstants.BLOCK_SIZE && row+1 < 2500/AIconstants.BLOCK_SIZE)
+    {
+      if (vertices[col][row + 1] != null) return vertices[col][row];
+    }
+
     // this situation should never happen, otherwise, how did the ant even get here?
     return null;
   }
@@ -155,6 +164,7 @@ public class ExplorationManager
       {
         if(vertices[col][row] != null)
         {
+          vertices[col][row].color = 1;
           vertices[col][row].cost_estimate = Short.MAX_VALUE;
           vertices[col][row].cost_so_far = Short.MAX_VALUE;
         }
@@ -162,10 +172,8 @@ public class ExplorationManager
     }
   }
 
-  private ArrayList<Vertex> vertexList(Vertex start, Vertex end)
+  private LinkedList<Vertex> vertexList(Vertex start, Vertex end)
   {
-    long t1 = System.currentTimeMillis();
-
     int startx = start.co.getX()/AIconstants.BLOCK_SIZE;
     int starty = start.co.getY()/AIconstants.BLOCK_SIZE;
     int endx = end.co.getX()/AIconstants.BLOCK_SIZE;
@@ -175,11 +183,11 @@ public class ExplorationManager
 
     // TODO: might need to check if enough connections
 
+    vertices[startx][starty].color = 0;
     vertices[startx][starty].cost_so_far = 0;
 
     PriorityQueue<Vertex> frontier = new PriorityQueue<>(100, new Comparator<Vertex>()
     {
-
       @Override
       public int compare(Vertex o1, Vertex o2)
       {
@@ -216,34 +224,33 @@ public class ExplorationManager
     }
 
     // adding nodes to the path
-    ArrayList<Vertex> list = new ArrayList<>();
+    LinkedList<Vertex> list = new LinkedList<>();
     Vertex p = vertices[end.x][end.y];
     Vertex pre = p.pre;
     // path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
     while (p.pre != null)
     {
-      list.add(p);
+      list.addFirst(p);
       p = pre;
       pre = p.pre;
 
     }
-    System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
     return list;
   }
 
   public Path genPath(Coordinate s, Vertex end)
   {
-    Vertex start = vertices[s.getX()/AIconstants.BLOCK_SIZE][s.getY()/AIconstants.BLOCK_SIZE];
+    long t1 = System.currentTimeMillis();
 
-    ArrayList<Vertex> p = vertexList(start, end);
+    Vertex start = findClosestVertex(s);
 
-    Vertex current = findClosestVertex(s);
-    Vertex next = start;
+    LinkedList<Vertex> p = vertexList(start, end);
 
-    Path path = Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY());
+    Vertex current = start;
+    Vertex next = p.remove(0);
+    System.out.println(p.size());
 
-    current = start;
-    next = p.remove(0);
+    Path path = Path.straightLine(s.getX(), s.getY(), start.co.getX(), start.co.getY());
 
 //    path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
     path.addPathToHead(current.getPath(next));
@@ -255,11 +262,20 @@ public class ExplorationManager
 //      path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
       path.addPathToHead(current.getPath(next));
     }
+    System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
     return path;
   }
 
   public Vertex randomUnexploredVertex()
   {
     return visited.remove(visited.size());
+  }
+
+  public static void main(String[] args)
+  {
+    Graph g = new Graph();
+    ExplorationManager ex = new ExplorationManager(g);
+
+    ex.genPath(new Coordinate(300,300), ex.vertices[119][41]);
   }
 }

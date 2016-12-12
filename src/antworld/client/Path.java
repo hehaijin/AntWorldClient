@@ -29,7 +29,7 @@ public class Path
    */
   void add(Direction node)
   {
-    path.addLast(node);
+    path.addFirst(node);
   }
 
   int size()
@@ -50,7 +50,7 @@ public class Path
   {
     while(!p.path.isEmpty())
     {
-      Direction d=p.path.getLast();
+      Direction d=p.path.removeFirst();
       path.addFirst(d);
     }
   }
@@ -112,16 +112,12 @@ public class Path
   {
     return straightLine(start.getX(), start.getY(), end.getX(), end.getY());
   }
-
-  
   
   public boolean hasNext()
   {
     if(path.size() >0) return true;
     return false;
   }
-  
-  
   
   // TODO do you want this?  
   public static void main(String[] args)
