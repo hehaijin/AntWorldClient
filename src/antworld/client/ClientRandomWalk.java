@@ -117,25 +117,11 @@ public class ClientRandomWalk
     @Override
     public void run()
     {
-//      System.out.println("Running for : " + ant.id);
-      System.out.println("GO TO : " + goTo.co.getX() + " " + goTo.co.getY() +  " from " + ant.gridX + " " + ant.gridY);
       Path p = explore.genPath(new Coordinate(ant.gridX,ant.gridY), goTo);
-//      System.out.println("DONE path");
-//      if(p == null) System.out.println("EXPLORE MADE NULL");
 
-      if(allpaths.get(ant.id) == null)
-      {
-//        System.out.println("PUT");
-        allpaths.put(ant.id, p);
-      }
-      else
-      {
-//        System.out.println("REPLACE");
-        allpaths.replace(ant.id, p);
-      }
+      allpaths.put(ant.id, p);
 
       pathIsBeingExplored.replace(ant.id, Boolean.FALSE);
-//      System.out.println("DONE COMPLETELY");
     }
   }
 
@@ -888,14 +874,12 @@ public class ClientRandomWalk
     {
       freeAnts.remove(ant.id);
 
-      if(alltasks.get(ant.id) == null) alltasks.put(ant.id, Task.EXPLORE);
-      else alltasks.replace(ant.id, Task.EXPLORE);
+      alltasks.put(ant.id, Task.EXPLORE);
 
-      if(pathIsBeingExplored.get(ant.id) == null)  pathIsBeingExplored.put(ant.id, Boolean.TRUE);
-      else pathIsBeingExplored.replace(ant.id, Boolean.TRUE);
+      pathIsBeingExplored.put(ant.id, Boolean.TRUE);
 
       ExplorationManager.Vertex v = explore.getUnexploredVertex();
-//      System.out.println("GO TO : " + v.co.getX() + " " + v.co.getY());
+
       pool.submit(new Explorer(ant, v));
     }
 
@@ -915,8 +899,7 @@ public class ClientRandomWalk
       Direction dir = allpaths.get(ant.id).getNext();
       Direction truDir =Coordinate.generalDir(dir);
 
-      if(lastMove.get(ant.id) == null) lastMove.put(ant.id, dir);
-      else lastMove.replace(ant.id, dir);
+      lastMove.put(ant.id, dir);
 
       action.type = AntActionType.MOVE;
       action.direction = truDir;

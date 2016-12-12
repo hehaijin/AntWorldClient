@@ -80,7 +80,7 @@ public class Path
     Direction straightX = Coordinate.getXDirection(xdiff);
     Direction straightY = Coordinate.getYDirection(ydiff);
 
-    int max = Math.max(xdiff_abs, xdiff_abs);
+    int max = Math.max(xdiff_abs, ydiff_abs);
 
     // first goes in a diagonal
     for(int i = 0; i < Math.min(xdiff_abs, ydiff_abs); i++)
@@ -92,7 +92,7 @@ public class Path
 
     if(max == xdiff_abs)
     {
-      for (int i = 0; i < xdiff - ydiff; i++)
+      for (int i = 0; i < xdiff_abs - ydiff_abs; i++)
       {
         line.add(straightX);
       }
@@ -100,7 +100,7 @@ public class Path
 
     if(max == ydiff_abs)
     {
-      for (int i = 0; i < ydiff - xdiff; i++)
+      for (int i = 0; i < ydiff_abs - xdiff_abs; i++)
       {
         line.add(straightY);
       }
@@ -120,9 +120,49 @@ public class Path
     return false;
   }
   
-  // TODO do you want this?  
   public static void main(String[] args)
   {
-    // TODO Auto-generated method stub
+    // for testing
+    Path start = new Path();
+    Path end = new Path();
+    Path line = Path.straightLine(300, 300, 304, 308);
+    Path otherLine = Path.straightLine(304, 308, 310, 310);
+
+    line.addPathToHead(otherLine);
+
+    start.add(Direction.EAST);
+    start.add(Direction.NORTH);
+    start.add(Direction.NORTH);
+    start.add(Direction.SOUTH);
+    start.add(Direction.SOUTHWEST);
+
+    end.add(Direction.WEST);
+    end.add(Direction.SOUTHWEST);
+    end.add(Direction.NORTH);
+    end.add(Direction.NORTHEAST);
+    end.add(Direction.SOUTH);
+
+//    int startSize = start.size();
+//    for(int i = 0; i < startSize; i++)
+//    {
+//      System.out.print(start.getNext().ordinal());
+//    }
+//    System.out.println();
+
+//    int endSize = end.size();
+//    for(int i = 0; i < endSize; i++)
+//    {
+//      System.out.print(end.getNext().ordinal());
+//    }
+//    System.out.println();
+
+//    start.addPathToHead(end);
+
+    int size = line.size();
+    for(int i = 0; i < size; i++)
+    {
+      System.out.print(line.getNext().ordinal());
+    }
+
   }
 }

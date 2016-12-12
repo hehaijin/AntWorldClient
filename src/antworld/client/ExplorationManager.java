@@ -305,16 +305,14 @@ public class ExplorationManager
   {
     long t1 = System.currentTimeMillis();
 
-
     Vertex start = findClosestVertex(s);
     if(start.visited == false)
     {
       unvisited.remove(start);
       start.visited = true;
     }
-//    System.out.println("finding v " + s.getX() + s.getY());
+
     LinkedList<Vertex> p = vertexList(start, end);
-//    System.out.println("found v " + s.getX() + s.getY());
 
 
     Vertex current = start;
@@ -324,12 +322,10 @@ public class ExplorationManager
       unvisited.remove(next);
       next.visited = true;
     }
-//    System.out.println(p.size());
 
     Path path = Path.straightLine(s.getX(), s.getY(), start.co.getX(), start.co.getY());
 
     path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
-//    path.addPathToHead(current.getPath(next));
 
     System.out.println("size of path " + p.size());
     while(p.size() > 0)
@@ -342,7 +338,6 @@ public class ExplorationManager
         next.visited = true;
       }
       path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
-//      path.addPathToHead(current.getPath(next));
     }
     System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
     return path;
