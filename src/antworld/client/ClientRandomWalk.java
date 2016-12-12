@@ -345,14 +345,14 @@ public class ClientRandomWalk
   
   private void checkAndDispatchWaterAnts(CommData commData)
   {
-    /*
+    
     
     if(antsForWater.size()<AIconstants.antsForWater)
     {
       ArrayList<AntData> ants=getClosestFreeAnts(commData, new Coordinate(centerX, centerY), AIconstants.antsForWater-antsForWater.size());
-      //I need the water location here.
-      
-      Coordinate waterlocation=new Coordinate(1, 1);
+   
+      Coordinate waterlocation=getWaterLocationForNest(commData);
+
       dispatchTo(ants, waterlocation);
       for(AntData ant: ants)
       {
@@ -360,7 +360,7 @@ public class ClientRandomWalk
       }
     }
     
-    */
+    
     
   }
   
@@ -486,7 +486,11 @@ public class ClientRandomWalk
       dist.add(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co));
     }
     Collections.sort(dist);
-    int range=dist.get(n-1);    
+    int range;
+    if(dist.size()< n-1)
+      range=dist.size();
+    else range=dist.get(n-1);    
+ 
     for(Integer id: freeAnts )
     {
       AntData ant=getAntbyId(data, id);
