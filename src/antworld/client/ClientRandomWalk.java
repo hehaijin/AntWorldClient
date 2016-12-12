@@ -57,7 +57,7 @@ public class ClientRandomWalk
   private HashMap<FoodData,ArrayList<Integer>> foodSiteAnts=new HashMap<>();
   private HashSet<Integer> freeAnts=new HashSet<>();
 
-// merge
+// merge this
   private CommData previousData;
 
   //A random number generator is created in Constants. Use it.
