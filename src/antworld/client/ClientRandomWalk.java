@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -328,6 +330,7 @@ public class ClientRandomWalk
     if(changeDir != AIconstants.CHANGE_DIR_TICK) ++changeDir;
     else changeDir = 0;
     
+    
     checkAndDispatchWaterAnts(commData);
     
     
@@ -357,6 +360,7 @@ public class ClientRandomWalk
       for(AntData ant: ants)
       {
         alltasks.put(ant.id, Task.GOTOWATER);
+        antsForWater.add(ant.id);
       }
     }
     
@@ -388,7 +392,7 @@ public class ClientRandomWalk
       
       
     }
-    if(DEBUG) System.out.println("the water location is"+ co.getX()+ " "+ co.getY());
+    System.out.println("the water location is "+ co.getX()+ " "+ co.getY());
     sc.close();    
     return co;
     
@@ -440,16 +444,17 @@ public class ClientRandomWalk
     AntData ant0=ants.get(0);
     ArrayList<AntData> group=new ArrayList<>();
     Coordinate c0=new Coordinate(ant0.gridX, ant0.gridY);
-    for(AntData ant: ants)
+    Iterator it=ants.iterator();
+    while(it.hasNext())
     {
+      AntData ant=(AntData) it.next();
+      
       if(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), c0)<= AIconstants.groupRadius)
       {
         group.add(ant);
-        ants.remove(ant);
+        it.remove();
       }
-      
     }
-    
     
     for(AntData ant: group)
     {
@@ -485,10 +490,13 @@ public class ClientRandomWalk
       AntData ant=getAntbyId(data, id);
       dist.add(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co));
     }
+    
     Collections.sort(dist);
     int range;
-    if(dist.size()< n-1)
-      range=dist.size();
+    if(dist.size()==0)
+      range=0;  
+    else if(dist.size()< n)
+      range=dist.get(dist.size()-1);
     else range=dist.get(n-1);    
  
     for(Integer id: freeAnts )
@@ -498,9 +506,8 @@ public class ClientRandomWalk
       {
         ants.add(ant);
       }
-      
     }
-  
+    System.out.println("recruited "+ ants.size()+ " ants.");
     return ants;
   }
   
@@ -612,6 +619,8 @@ public class ClientRandomWalk
         return true;
       }
       // if it has finished all the things above, it is will come out
+      alltasks.put(ant.id, Task.GOTOWATER);
+      freeAnts.add(ant.id);
       action.type = AntActionType.EXIT_NEST;
       action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
       action.y = centerY - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
