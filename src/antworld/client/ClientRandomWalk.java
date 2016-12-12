@@ -481,6 +481,7 @@ public class ClientRandomWalk
    * @param n
    * @return   n the most closet free ants
    */
+
   private ArrayList<AntData> getClosestFreeAnts(CommData data,Coordinate co, int n)
   {
     ArrayList<AntData> ants=new ArrayList<>();
@@ -490,28 +491,34 @@ public class ClientRandomWalk
       AntData ant=getAntbyId(data, id);
       dist.add(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co));
     }
-    
+
     Collections.sort(dist);
+    System.out.println(dist);
     int range;
     if(dist.size()==0)
-      range=0;  
+      range=0;
     else if(dist.size()< n)
       range=dist.get(dist.size()-1);
-    else range=dist.get(n-1);    
- 
+    else range=dist.get(n-1);
+
+    int i=0;
     for(Integer id: freeAnts )
     {
       AntData ant=getAntbyId(data, id);
-      if(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co)<= range)
+      if(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co)<= range && i<n)
       {
         ants.add(ant);
+        i++;
+        if(i==n) break;
       }
     }
-    System.out.println("recruited "+ ants.size()+ " ants.");
+    //  System.out.println("recruited "+ ants.size()+ " ants.");
     return ants;
   }
-  
-  
+
+
+
+
   /**
    * return an antData by id.
    * @param data
