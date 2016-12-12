@@ -338,14 +338,14 @@ public class ClientRandomWalk
   
   private void checkAndDispatchWaterAnts(CommData commData)
   {
-    /*
+    
     
     if(antsForWater.size()<AIconstants.antsForWater)
     {
       ArrayList<AntData> ants=getClosestFreeAnts(commData, new Coordinate(centerX, centerY), AIconstants.antsForWater-antsForWater.size());
-      //I need the water location here.
-      
-      Coordinate waterlocation=new Coordinate(1, 1);
+   
+      Coordinate waterlocation=getWaterLocationForNest(commData);
+
       dispatchTo(ants, waterlocation);
       for(AntData ant: ants)
       {
@@ -353,9 +353,45 @@ public class ClientRandomWalk
       }
     }
     
-    */
+    
     
   }
+  
+  
+  private Coordinate getWaterLocationForNest(CommData comdata) 
+  {
+    int nestid=comdata.myNest.ordinal();
+    Coordinate co=null;
+    Scanner sc=null;
+    try{
+    sc=new Scanner(new File("resources/waterLocations.txt"));
+    }
+    catch(FileNotFoundException e)
+    {
+      System.out.println("water location file not found");
+    }
+    while(sc.hasNextLine())
+    {
+      String s=sc.nextLine();
+      String[] s1=s.split(" ");
+      if(Integer.parseInt(s1[0])==nestid)
+      {
+        co=new Coordinate(Integer.parseInt(s1[3]), Integer.parseInt(s1[4]));
+      }
+      
+      
+    }
+    if(DEBUG) System.out.println("the water location is"+ co.getX()+ " "+ co.getY());
+    sc.close();    
+    return co;
+    
+  }
+
+  
+  
+  
+  
+  
   
   public void checkAndDispatchFoodAnts(CommData commData)
   {
@@ -441,7 +477,11 @@ public class ClientRandomWalk
       dist.add(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co));
     }
     Collections.sort(dist);
-    int range=dist.get(n-1);    
+    int range;
+    if(dist.size()< n-1)
+      range=dist.size();
+    else range=dist.get(n-1);    
+ 
     for(Integer id: freeAnts )
     {
       AntData ant=getAntbyId(data, id);
