@@ -1,5 +1,6 @@
 package antworld.client;
 
+import antworld.common.Constants;
 import antworld.common.Direction;
 
 /**
@@ -24,6 +25,17 @@ public class Coordinate
     this.x = x;
     this.y = y;
   }
+
+  private static Direction[] n = {Direction.NORTH, Direction.getLeftDir(Direction.NORTH), Direction.getRightDir(Direction.NORTH)};
+  private static Direction[] s = {Direction.SOUTH, Direction.getLeftDir(Direction.SOUTH), Direction.getRightDir(Direction.SOUTH)};
+  private static Direction[] e = {Direction.EAST, Direction.getLeftDir(Direction.EAST), Direction.getRightDir(Direction.EAST)};
+  private static Direction[] w = {Direction.WEST, Direction.getLeftDir(Direction.WEST), Direction.getRightDir(Direction.WEST)};
+  private static Direction[] nw = {Direction.NORTHWEST, Direction.getLeftDir(Direction.NORTHWEST), Direction.getRightDir(Direction.NORTHWEST)};
+  private static Direction[] ne = {Direction.NORTHEAST, Direction.getLeftDir(Direction.NORTHEAST), Direction.getRightDir(Direction.NORTHEAST)};
+  private static Direction[] se = {Direction.SOUTHEAST, Direction.getLeftDir(Direction.SOUTHEAST), Direction.getRightDir(Direction.SOUTHEAST)};
+  private static Direction[] sw = {Direction.SOUTHWEST, Direction.getLeftDir(Direction.SOUTHWEST), Direction.getRightDir(Direction.SOUTHWEST)};
+
+  private static Direction[][] dir = {n, ne, e, se, s, sw, w, nw};
 
   public int getX()
   {
@@ -119,6 +131,11 @@ public class Coordinate
   public static int linearDistance(Coordinate co1, Coordinate co2)
   {
     return Math.max(Math.abs(co1.getX()-co2.getX()), Math.abs(co1.getY()-co2.getY()));
+  }
+
+  public static Direction generalDir(Direction d)
+  {
+    return dir[d.ordinal()][Constants.random.nextInt(3)];
   }
 
 }

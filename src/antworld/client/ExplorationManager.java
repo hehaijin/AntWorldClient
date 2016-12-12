@@ -128,7 +128,6 @@ public class ExplorationManager
 
   public Vertex getUnexploredVertex()
   {
-//    System.out.println("UNEXPLORED " + unvisited.size());
     return unvisited.get(Constants.random.nextInt(unvisited.size()));
   }
 
@@ -166,19 +165,26 @@ public class ExplorationManager
     if(col >= 0 && row >= 0 && col < 5000/AIconstants.BLOCK_SIZE && row < 2500/AIconstants.BLOCK_SIZE)
     {
       if (vertices[col][row] != null) return vertices[col][row];
+      else {System.out.println(col + " " + row + " is null");}
     }
     if(col+1 >= 0 && row+1 >= 0 && col+1 < 5000/AIconstants.BLOCK_SIZE && row+1 < 2500/AIconstants.BLOCK_SIZE)
     {
-      if (vertices[col + 1][row + 1] != null) return vertices[col][row];
-    }
+      if (vertices[col + 1][row + 1] != null) return vertices[col+1][row+1];
+      else {System.out.println(col + " " + row + " is null");}
+
+      }
     if(col+1 >= 0 && row >= 0 && col+1 < 5000/AIconstants.BLOCK_SIZE && row < 2500/AIconstants.BLOCK_SIZE)
     {
-      if (vertices[col + 1][row] != null) return vertices[col][row];
-    }
+      if (vertices[col + 1][row] != null) return vertices[col+1][row];
+      else {System.out.println(col + " " + row + " is null");}
+
+      }
     if(col >= 0 && row+1 >= 0 && col < 5000/AIconstants.BLOCK_SIZE && row+1 < 2500/AIconstants.BLOCK_SIZE)
     {
-      if (vertices[col][row + 1] != null) return vertices[col][row];
-    }
+      if (vertices[col][row + 1] != null) return vertices[col][row+1];
+      else {System.out.println(col + " " + row + " is null");}
+
+      }
 
     // this situation should never happen, otherwise, how did the ant even get here?
     return null;
@@ -251,7 +257,6 @@ public class ExplorationManager
       @Override
       public int compare(Vertex o1, Vertex o2)
       {
-        // TODO Auto-generated method stub
         return o1.cost_so_far + o1.cost_estimate - o2.cost_so_far - o2.cost_estimate;
       }
     });
@@ -268,7 +273,6 @@ public class ExplorationManager
         if (v.color == 1)
         {
           v.color = 0;
-          // TODO this will either be cost or just + 1
           if (v.cost_so_far > u.cost_so_far + 1)
           {
             v.cost_so_far = u.cost_so_far + 1;
@@ -303,6 +307,11 @@ public class ExplorationManager
 
 
     Vertex start = findClosestVertex(s);
+    if(start.visited == false)
+    {
+      unvisited.remove(start);
+      start.visited = true;
+    }
 //    System.out.println("finding v " + s.getX() + s.getY());
     LinkedList<Vertex> p = vertexList(start, end);
 //    System.out.println("found v " + s.getX() + s.getY());
@@ -310,6 +319,11 @@ public class ExplorationManager
 
     Vertex current = start;
     Vertex next = p.removeFirst();
+    if(next.visited == false)
+    {
+      unvisited.remove(next);
+      next.visited = true;
+    }
 //    System.out.println(p.size());
 
     Path path = Path.straightLine(s.getX(), s.getY(), start.co.getX(), start.co.getY());
@@ -322,6 +336,11 @@ public class ExplorationManager
     {
       current = next;
       next = p.removeFirst();
+      if(next.visited == false)
+      {
+        unvisited.remove(next);
+        next.visited = true;
+      }
       path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
 //      path.addPathToHead(current.getPath(next));
     }
@@ -334,14 +353,16 @@ public class ExplorationManager
     Graph g = new Graph();
     ExplorationManager ex = new ExplorationManager(g);
 
-    Path p = ex.genPath(new Coordinate(300,300), ex.vertices[100][80]);
-    int size = ex.unvisited.size();
+//    Path p = ex.genPath(new Coordinate(900,2203), ex.vertices[126][9]);
+    Path p = ex.genPath(new Coordinate(3407,2259), ex.vertices[67][22]);
+
+    int size = p.size();
     System.out.println("Size : " + size);
     Direction d;
     for(int i = 0; i < size; i++)
     {
       d = p.getNext();
-      System.out.println(d.ordinal());
+      System.out.print(d.ordinal());
     }
   }
 }

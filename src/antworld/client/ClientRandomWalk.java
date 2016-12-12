@@ -118,7 +118,7 @@ public class ClientRandomWalk
     public void run()
     {
 //      System.out.println("Running for : " + ant.id);
-      System.out.println("GO TO : " + goTo.co.getX() + " " + goTo.co.getY());
+      System.out.println("GO TO : " + goTo.co.getX() + " " + goTo.co.getY() +  " from " + ant.gridX + " " + ant.gridY);
       Path p = explore.genPath(new Coordinate(ant.gridX,ant.gridY), goTo);
 //      System.out.println("DONE path");
 //      if(p == null) System.out.println("EXPLORE MADE NULL");
@@ -901,25 +901,28 @@ public class ClientRandomWalk
 
     if(allpaths.get(ant.id) != null && allpaths.get(ant.id).size() != 0)
     {
-//      System.out.println("look");
-      Direction dir = allpaths.get(ant.id).getNext();
+      // collision handling
+      if(ant.myAction.type == AntActionType.STASIS)
+      {
+        if(lastMove.get(ant.id) != null)
+        {
+          action.type = AntActionType.MOVE;
+          action.direction = Coordinate.generalDir(lastMove.get(ant.id));
+          return true;
+        }
+      }
 
-//      // TODO: handle collisions
-//      if(ant.myAction.type == AntActionType.STASIS)
-//      {
-//        dir = Direction.getRandomDir();
-//      }
+      Direction dir = allpaths.get(ant.id).getNext();
+      Direction truDir =Coordinate.generalDir(dir);
 
       if(lastMove.get(ant.id) == null) lastMove.put(ant.id, dir);
       else lastMove.replace(ant.id, dir);
 
       action.type = AntActionType.MOVE;
-      action.direction = dir;
+      action.direction = truDir;
     }
     else
     {
-//      if(allpaths.get(ant.id) == null) System.out.println("Path null");
-//      else if(allpaths.get(ant.id).size() == 0) System.out.println("Path size 0");
       action.type = AntActionType.STASIS;
     }
     return true;

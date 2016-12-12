@@ -27,7 +27,7 @@ public class AIconstants
   public static final int BLOCK_SIZE = 30;
   public static final int antsforexploration = 50;
 
-  public static final int ANT_OUT_RATE = 1;
+  public static final int ANT_OUT_RATE = 5;
   public static final int ANT_OUT_TICK = 40;
   public static final int EXIT_NEST_TIME = 100;
   
