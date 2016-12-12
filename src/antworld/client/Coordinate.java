@@ -52,10 +52,11 @@ public class Coordinate
     return manhattanDistance(c1.getX(), c1.getY(), c2.getX(), c2.getY());
   }
 
-  @Override
+
   /**
    * Checks if two coordinates are the same
    */
+  @Override
   public boolean equals(Object coordinate)
   {
     Coordinate c = (Coordinate) coordinate;

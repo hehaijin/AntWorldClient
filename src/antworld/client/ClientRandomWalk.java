@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,7 +30,9 @@ public class ClientRandomWalk
   private int centerX, centerY;
   private ExplorationManager explore;
   private boolean firstRun = true;
-  private int changeDir = 1;
+  private int outTotal = 0;
+  private int nextExitTime = 0;
+  private int tick = 1;
 
   private Socket clientSocket;
 
@@ -41,13 +44,13 @@ public class ClientRandomWalk
   private ArrayList<Coordinate> waterLocations = new ArrayList<>(); // stores some water locations
 
   // TODO hashmaps are unsynchronized by nature, it's possible they need to be synchronized
-  private HashMap<Integer,FoodType> desiredFood = new HashMap<>(); // stores the desired food of the ant.
+  private ConcurrentHashMap<Integer, Boolean> pathIsBeingExplored = new ConcurrentHashMap<>();
   private HashMap<Integer, Boolean> attacked = new HashMap<>();
-  private HashMap<Integer, Integer> distanceFromNest = new HashMap<>();
 
   private ArrayList<Path> foodPath = new ArrayList<>(); // stores paths to food from colony
   private ArrayList<Path> waterPath = new ArrayList<>(); // stores paths to water from colony
-  private HashMap<Integer,Path> allpaths=new HashMap<>(); // for storing shortest path.
+  private ConcurrentHashMap<Integer,Path> allpaths=new ConcurrentHashMap<>(); // for storing shortest path.
+  private HashMap<Integer, Direction> lastMove = new HashMap<>();
   private HashMap<Integer,AntAction> allactions=new HashMap<>(); //used to check if current action is successful
   private HashMap<Integer,Task> alltasks=new HashMap<>();
   private HashSet<Integer> antsForWater=new HashSet<>();
@@ -65,7 +68,7 @@ public class ClientRandomWalk
   
   
 //Thread pool for calculating shortest path.
-  ExecutorService pool=Executors.newFixedThreadPool(10);
+  ExecutorService pool=Executors.newFixedThreadPool(8);
   
   class SPCalculator implements Runnable
   {
@@ -114,9 +117,25 @@ public class ClientRandomWalk
     @Override
     public void run()
     {
+//      System.out.println("Running for : " + ant.id);
+      System.out.println("GO TO : " + goTo.co.getX() + " " + goTo.co.getY());
       Path p = explore.genPath(new Coordinate(ant.gridX,ant.gridY), goTo);
-      if(allpaths.get(ant.id) == null) allpaths.put(ant.id, p);
-      else allpaths.replace(ant.id, p);
+//      System.out.println("DONE path");
+//      if(p == null) System.out.println("EXPLORE MADE NULL");
+
+      if(allpaths.get(ant.id) == null)
+      {
+//        System.out.println("PUT");
+        allpaths.put(ant.id, p);
+      }
+      else
+      {
+//        System.out.println("REPLACE");
+        allpaths.replace(ant.id, p);
+      }
+
+      pathIsBeingExplored.replace(ant.id, Boolean.FALSE);
+//      System.out.println("DONE COMPLETELY");
     }
   }
 
@@ -331,9 +350,7 @@ public class ClientRandomWalk
 
   private void chooseActionsOfAllAnts(CommData commData)
   {
-    if(changeDir != AIconstants.CHANGE_DIR_TICK) ++changeDir;
-    else changeDir = 0;
-    
+    outTotal = 0;
 
 //    checkAndDispatchWaterAnts(commData);
 
@@ -342,7 +359,7 @@ public class ClientRandomWalk
       AntAction action = chooseAction(commData, ant);
       ant.myAction = action;
     }
-
+    tick++;
   }
   
   
@@ -619,12 +636,22 @@ public class ClientRandomWalk
         return true;
       }
       // if it has finished all the things above, it is will come out
-      alltasks.put(ant.id, Task.GOTOWATER);
-      freeAnts.add(ant.id);
-      action.type = AntActionType.EXIT_NEST;
-      action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
-      action.y = centerY - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
-      return true;
+
+      if(outTotal != AIconstants.ANT_OUT_RATE && (tick % AIconstants.ANT_OUT_TICK == 0))
+      {
+        outTotal++;
+        alltasks.put(ant.id, Task.GOTOWATER);
+        freeAnts.add(ant.id);
+        action.type = AntActionType.EXIT_NEST;
+        action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
+        action.y = centerY - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
+        return true;
+      }
+      else
+      {
+        action.type = AntActionType.STASIS;
+        return true;
+      }
     }
     return false;
   }
@@ -856,27 +883,43 @@ public class ClientRandomWalk
    */
   private boolean goExplore(CommData data, AntData ant, AntAction action)
   {
-    if(freeAnts.contains(ant.id))
+    if(freeAnts.contains(ant.id) || ((alltasks.get(ant.id) == Task.EXPLORE)
+            && !pathIsBeingExplored.get(ant.id) && (allpaths.get(ant.id) == null || allpaths.get(ant.id).size() == 0)))
     {
       freeAnts.remove(ant.id);
 
-      System.out.println("a");
       if(alltasks.get(ant.id) == null) alltasks.put(ant.id, Task.EXPLORE);
       else alltasks.replace(ant.id, Task.EXPLORE);
-      System.out.println("b");
 
-//      if(pool.)
-      pool.submit(new Explorer(ant, explore.getUnexploredVertex()));
+      if(pathIsBeingExplored.get(ant.id) == null)  pathIsBeingExplored.put(ant.id, Boolean.TRUE);
+      else pathIsBeingExplored.replace(ant.id, Boolean.TRUE);
+
+      ExplorationManager.Vertex v = explore.getUnexploredVertex();
+//      System.out.println("GO TO : " + v.co.getX() + " " + v.co.getY());
+      pool.submit(new Explorer(ant, v));
     }
+
     if(allpaths.get(ant.id) != null && allpaths.get(ant.id).size() != 0)
     {
-      System.out.println("looking");
+//      System.out.println("look");
       Direction dir = allpaths.get(ant.id).getNext();
+
+//      // TODO: handle collisions
+//      if(ant.myAction.type == AntActionType.STASIS)
+//      {
+//        dir = Direction.getRandomDir();
+//      }
+
+      if(lastMove.get(ant.id) == null) lastMove.put(ant.id, dir);
+      else lastMove.replace(ant.id, dir);
+
       action.type = AntActionType.MOVE;
       action.direction = dir;
     }
     else
     {
+//      if(allpaths.get(ant.id) == null) System.out.println("Path null");
+//      else if(allpaths.get(ant.id).size() == 0) System.out.println("Path size 0");
       action.type = AntActionType.STASIS;
     }
     return true;

@@ -9,7 +9,7 @@ public class Path
 
   Direction getNext()
   {
-    return path.pop();
+    return path.removeFirst();
   }
 
   public Path deepCopy()
@@ -36,7 +36,8 @@ public class Path
   {
     return path.size();
   }
-  
+
+  // TODO broken
   void addPath(Path p)
   {
     while(!p.path.isEmpty())
@@ -51,7 +52,7 @@ public class Path
     while(!p.path.isEmpty())
     {
       Direction d=p.path.removeFirst();
-      path.addFirst(d);
+      path.addLast(d);
     }
   }
 
@@ -82,7 +83,7 @@ public class Path
     int max = Math.max(xdiff_abs, xdiff_abs);
 
     // first goes in a diagonal
-    for(int i = 0; i < Math.min(xdiff, ydiff); i++)
+    for(int i = 0; i < Math.min(xdiff_abs, ydiff_abs); i++)
     {
       line.add(diag);
     }

@@ -16,12 +16,12 @@ public class ExplorationManager
     boolean visited = false;
     short color = 1;
     ArrayList<Vertex> adjacent = new ArrayList<>();
-    HashMap<Vertex, Path> paths = new HashMap<>();
+//    HashMap<Vertex, Path> paths = new HashMap<>();
     int cost_so_far = Integer.MAX_VALUE;
     int cost_estimate = Integer.MAX_VALUE;
     int x;
     int y;
-    Vertex pre;
+    Vertex pre = null;
 
     public Vertex(int x, int y)
     {
@@ -30,10 +30,10 @@ public class ExplorationManager
       this.y = y/AIconstants.BLOCK_SIZE;
     }
 
-    public Path getPath(Vertex v)
-    {
-      return this.paths.get(v);
-    }
+//    public Path getPath(Vertex v)
+//    {
+//      return this.paths.get(v);
+//    }
 
     public int costestimate(Vertex v, Vertex u)
     {
@@ -46,6 +46,7 @@ public class ExplorationManager
       copy.x = x/AIconstants.BLOCK_SIZE;
       copy.y = y/AIconstants.BLOCK_SIZE;
       copy.visited = this.visited;
+
       return copy;
     }
 
@@ -97,21 +98,21 @@ public class ExplorationManager
       }
     }
 
-    Vertex v0;
-    for(int col = 0; col < xTotal; col++)
-    {
-      for (int row = 0; row < yTotal; row++)
-      {
-        v0 = vertices[col][row];
-        if(v0 != null)
-        {
-          for (Vertex v1 : v0.adjacent)
-          {
-            v0.paths.put(v1, Path.straightLine(v0.co.getX(), v0.co.getY(), v1.co.getX(), v1.co.getY()));
-          }
-        }
-      }
-    }
+//    Vertex v0;
+//    for(int col = 0; col < xTotal; col++)
+//    {
+//      for (int row = 0; row < yTotal; row++)
+//      {
+//        v0 = vertices[col][row];
+//        if(v0 != null)
+//        {
+//          for (Vertex v1 : v0.adjacent)
+//          {
+//            v0.paths.put(v1, Path.straightLine(v0.co.getX(), v0.co.getY(), v1.co.getX(), v1.co.getY()));
+//          }
+//        }
+//      }
+//    }
   }
 
   public void markVisited(int x, int y)
@@ -127,6 +128,7 @@ public class ExplorationManager
 
   public Vertex getUnexploredVertex()
   {
+//    System.out.println("UNEXPLORED " + unvisited.size());
     return unvisited.get(Constants.random.nextInt(unvisited.size()));
   }
 
@@ -159,7 +161,7 @@ public class ExplorationManager
     int col = x/AIconstants.BLOCK_SIZE;
     int row = y/AIconstants.BLOCK_SIZE;
 
-    System.out.println(col + " " + row);
+//    System.out.println(col + " " + row);
 
     if(col >= 0 && row >= 0 && col < 5000/AIconstants.BLOCK_SIZE && row < 2500/AIconstants.BLOCK_SIZE)
     {
@@ -205,9 +207,23 @@ public class ExplorationManager
     {
       for (int row = 0; row < yTotal; row++)
       {
-        if(vertices[col][row] != null)
+        if (vertices[col][row] != null)
         {
           temp[col][row] = vertices[col][row].copy();
+        }
+      }
+    }
+
+    for(int col = 0; col < xTotal; col++)
+    {
+      for (int row = 0; row < yTotal; row++)
+      {
+        if(vertices[col][row] != null)
+        {
+          for(Vertex v : vertices[col][row].adjacent)
+          {
+            temp[col][row].adjacent.add(temp[v.x][v.y]);
+          }
         }
       }
     }
@@ -222,12 +238,13 @@ public class ExplorationManager
     int endy = end.co.getY()/AIconstants.BLOCK_SIZE;
 
     Vertex[][] temp = copy();
+
 //    reset();
 
     // TODO: might need to check if enough connections
 
-    vertices[startx][starty].color = 0;
-    vertices[startx][starty].cost_so_far = 0;
+    temp[startx][starty].color = 0;
+    temp[startx][starty].cost_so_far = 0;
 
     PriorityQueue<Vertex> frontier = new PriorityQueue<>(100, new Comparator<Vertex>()
     {
@@ -239,9 +256,9 @@ public class ExplorationManager
       }
     });
 
-    frontier.offer(vertices[startx][starty]);
+    frontier.offer(temp[startx][starty]);
 
-    System.out.println("start calculating path");
+//    System.out.println("start calculating path");
     loop: while (frontier.size() > 0)
     {
       Vertex u = frontier.poll();
@@ -262,13 +279,12 @@ public class ExplorationManager
         }
         if (v.x == end.x && v.y == end.y)
           break loop;
-
       }
     }
 
     // adding nodes to the path
     LinkedList<Vertex> list = new LinkedList<>();
-    Vertex p = vertices[end.x][end.y];
+    Vertex p = temp[end.x][end.y];
     Vertex pre = p.pre;
     // path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
     while (p.pre != null)
@@ -276,7 +292,6 @@ public class ExplorationManager
       list.addFirst(p);
       p = pre;
       pre = p.pre;
-
     }
     System.out.println("Done calculating path");
     return list;
@@ -286,25 +301,29 @@ public class ExplorationManager
   {
     long t1 = System.currentTimeMillis();
 
-    Vertex start = findClosestVertex(s);
 
+    Vertex start = findClosestVertex(s);
+//    System.out.println("finding v " + s.getX() + s.getY());
     LinkedList<Vertex> p = vertexList(start, end);
+//    System.out.println("found v " + s.getX() + s.getY());
+
 
     Vertex current = start;
-    Vertex next = p.remove(0);
-    System.out.println(p.size());
+    Vertex next = p.removeFirst();
+//    System.out.println(p.size());
 
     Path path = Path.straightLine(s.getX(), s.getY(), start.co.getX(), start.co.getY());
 
-//    path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
-    path.addPathToHead(current.getPath(next));
+    path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
+//    path.addPathToHead(current.getPath(next));
 
+    System.out.println("size of path " + p.size());
     while(p.size() > 0)
     {
       current = next;
-      next = p.remove(0);
-//      path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
-      path.addPathToHead(current.getPath(next));
+      next = p.removeFirst();
+      path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
+//      path.addPathToHead(current.getPath(next));
     }
     System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
     return path;
@@ -315,8 +334,8 @@ public class ExplorationManager
     Graph g = new Graph();
     ExplorationManager ex = new ExplorationManager(g);
 
-    Path p = ex.genPath(new Coordinate(300,300), ex.vertices[15][14]);
-    int size = p.size();
+    Path p = ex.genPath(new Coordinate(300,300), ex.vertices[100][80]);
+    int size = ex.unvisited.size();
     System.out.println("Size : " + size);
     Direction d;
     for(int i = 0; i < size; i++)
