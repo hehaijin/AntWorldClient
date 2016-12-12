@@ -70,8 +70,8 @@ public class Path
     
     int dirY; 
     if(ydiff_abs!=0) 
-      dirY= xdiff/xdiff_abs;
-     else dirY=0;
+      dirY= ydiff/ydiff_abs;
+    else dirY=0;
    // int dirX = xdiff/xdiff_abs;
   //  int dirY = ydiff/ydiff_abs;
     Direction diag = Coordinate.getDirection(dirX, dirY);
