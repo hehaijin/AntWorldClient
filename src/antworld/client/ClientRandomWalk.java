@@ -364,6 +364,42 @@ public class ClientRandomWalk
     
   }
   
+  
+  private Coordinate getWaterLocationForNest(CommData comdata) 
+  {
+    int nestid=comdata.myNest.ordinal();
+    Coordinate co=null;
+    Scanner sc=null;
+    try{
+    sc=new Scanner(new File("resources/waterLocations.txt"));
+    }
+    catch(FileNotFoundException e)
+    {
+      System.out.println("water location file not found");
+    }
+    while(sc.hasNextLine())
+    {
+      String s=sc.nextLine();
+      String[] s1=s.split(" ");
+      if(Integer.parseInt(s1[0])==nestid)
+      {
+        co=new Coordinate(Integer.parseInt(s1[3]), Integer.parseInt(s1[4]));
+      }
+      
+      
+    }
+    if(DEBUG) System.out.println("the water location is"+ co.getX()+ " "+ co.getY());
+    sc.close();    
+    return co;
+    
+  }
+
+  
+  
+  
+  
+  
+  
   public void checkAndDispatchFoodAnts(CommData commData)
   {
     //dispatch food ants
