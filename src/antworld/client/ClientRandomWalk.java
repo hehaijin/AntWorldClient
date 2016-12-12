@@ -27,7 +27,7 @@ public class ClientRandomWalk
   private boolean isConnected = false;
   private NestNameEnum myNestName = null;
   private int centerX, centerY;
-  private ExplorationManager walk;
+  private ExplorationManager explore;
   private boolean firstRun = true;
   private int changeDir = 1;
 
@@ -98,23 +98,11 @@ public class ClientRandomWalk
       }
 
     }
-
   }
-  
-//  private boolean updateDistanceFromNest(CommData data)
+
+//  class Explorer implements Runnable
 //  {
-//    int x = data.nestData[data.myNest.ordinal()].centerX;
-//    int y = data.nestData[data.myNest.ordinal()].centerY;
-//    int totalDistance = 0;
-//    int max = 0;
-//    int dist;
 //
-//    for(AntData ant : data.myAntList)
-//    {
-//      dist = Coordinate.manhattanDistance(x,y,ant.gridX,ant.gridY);
-//      if(dist > max) max = dist;
-//      totalDistance += dist;
-//    }
 //  }
 
   public ClientRandomWalk(String host, int portNumber, TeamNameEnum team)
@@ -127,7 +115,7 @@ public class ClientRandomWalk
     if (!isConnected) System.exit(0);
 
     // TODO perform this on separate thread?
-//    walk = new ExplorationManager(world);
+    explore = new ExplorationManager(world);
 
     CommData data = obtainNest();
 
@@ -535,13 +523,6 @@ public class ClientRandomWalk
     }
     return null;
   }
-  
-  
-  
-  
-  
-  
-  
 
   private void detectAttacks(CommData data)
   {

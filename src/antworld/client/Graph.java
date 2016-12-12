@@ -322,7 +322,5 @@ public class Graph
 //    }
 
     ExplorationManager e = new ExplorationManager(g);
-    e.genVertices();
   }
-
 }

@@ -40,6 +40,15 @@ public class ExplorationManager
       return Coordinate.manhattanDistance(v.x,v.y,u.x,u.y);
     }
 
+    public Vertex copy()
+    {
+      Vertex copy = new Vertex(this.co.getX(), this.co.getY());
+      copy.x = x/AIconstants.BLOCK_SIZE;
+      copy.y = y/AIconstants.BLOCK_SIZE;
+      copy.visited = this.visited;
+      return copy;
+    }
+
 //    public int getCost(Vertex v)
 //    {
 //      return this.cost.get(v);
@@ -101,6 +110,16 @@ public class ExplorationManager
           }
         }
       }
+    }
+  }
+
+  public void markVisited(int x, int y)
+  {
+    int row;
+    int col;
+    if((col = x % AIconstants.BLOCK_SIZE) == 0 && (row = y % AIconstants.BLOCK_SIZE) == 0)
+    {
+      vertices[col][row].visited = true;
     }
   }
 
@@ -172,6 +191,22 @@ public class ExplorationManager
     }
   }
 
+  private Vertex[][] copy()
+  {
+    Vertex[][] temp = new Vertex[xTotal][yTotal];
+    for(int col = 0; col < xTotal; col++)
+    {
+      for (int row = 0; row < yTotal; row++)
+      {
+        if(vertices[col][row] != null)
+        {
+          temp[col][row] = vertices[col][row].copy();
+        }
+      }
+    }
+    return temp;
+  }
+
   private LinkedList<Vertex> vertexList(Vertex start, Vertex end)
   {
     int startx = start.co.getX()/AIconstants.BLOCK_SIZE;
@@ -179,7 +214,8 @@ public class ExplorationManager
     int endx = end.co.getX()/AIconstants.BLOCK_SIZE;
     int endy = end.co.getY()/AIconstants.BLOCK_SIZE;
 
-    reset();
+    Vertex[][] temp = copy();
+//    reset();
 
     // TODO: might need to check if enough connections
 
