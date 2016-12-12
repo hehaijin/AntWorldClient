@@ -354,10 +354,11 @@ public class ClientRandomWalk
     
     
     if(antsForWater.size()<AIconstants.antsForWater)
-    {
-      ArrayList<AntData> ants=getClosestFreeAnts(commData, new Coordinate(centerX, centerY), AIconstants.antsForWater-antsForWater.size());
+    {  Coordinate waterlocation=getWaterLocationForNest(commData);
+      
+      ArrayList<AntData> ants=getClosestFreeAnts(commData, waterlocation, AIconstants.antsForWater-antsForWater.size());
    
-      Coordinate waterlocation=getWaterLocationForNest(commData);
+    
 
       for(AntData ant: ants)
       {
@@ -487,14 +488,19 @@ public class ClientRandomWalk
 
   private ArrayList<AntData> getClosestFreeAnts(CommData data,Coordinate co, int n)
   {
-    ArrayList<AntData> ants=new ArrayList<>();
-    ArrayList<Integer> dist=new ArrayList<>();
-    for(Integer id: freeAnts )
+    
+
+    ArrayList<AntData> availableAnts=new ArrayList<>();
+    for(AntData ant:data.myAntList)
     {
-      AntData ant=getAntbyId(data, id);
-      dist.add(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co));
+      if(alltasks.get(ant.id)==Task.EXPLORE && world.getNode(ant.gridX, ant.gridY).landtype==LandType.GRASS)
+        availableAnts.add(ant);
     }
 
+    
+    ArrayList<AntData> ants=new ArrayList<>();
+    ArrayList<Integer> dist=new ArrayList<>();
+   
     Collections.sort(dist);
    // System.out.println(dist);
     int range;
@@ -505,9 +511,11 @@ public class ClientRandomWalk
     else range=dist.get(n-1);
 
     int i=0;
-    for(Integer id: freeAnts )
+
+
+    for(AntData ant: availableAnts )
     {
-      AntData ant=getAntbyId(data, id);
+      //AntData ant=getAntbyId(data, id);
       if(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co)<= range && i<n)
       {
         ants.add(ant);
@@ -517,6 +525,7 @@ public class ClientRandomWalk
     }
      System.out.println("recruited "+ ants.size()+ " ants.");
     return ants;
+
   }
 
 

@@ -20,7 +20,7 @@ import antworld.common.LandType;
 
 public class Graph
 {
-  private class Node
+   class Node
   {
     int x, y;
     int height;
