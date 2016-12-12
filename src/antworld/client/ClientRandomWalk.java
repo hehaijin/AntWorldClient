@@ -31,8 +31,7 @@ public class ClientRandomWalk
   private ExplorationManager explore;
   private boolean firstRun = true;
   private int outTotal = 0;
-  private int nextExitTime = 0;
-  private int tick = 1;
+  private int tick = 960;
 
   private Socket clientSocket;
 
@@ -117,6 +116,7 @@ public class ClientRandomWalk
     @Override
     public void run()
     {
+      System.out.println("ANT ID: " + ant.id + " GO TO : " + goTo.co.getX() + " " + goTo.co.getY());
       Path p = explore.genPath(new Coordinate(ant.gridX,ant.gridY), goTo);
 
       allpaths.put(ant.id, p);
@@ -892,12 +892,14 @@ public class ClientRandomWalk
         {
           action.type = AntActionType.MOVE;
           action.direction = Coordinate.generalDir(lastMove.get(ant.id));
+          System.out.println("b ");
           return true;
         }
       }
 
       Direction dir = allpaths.get(ant.id).getNext();
       Direction truDir =Coordinate.generalDir(dir);
+      System.out.println("a " + truDir.ordinal() + " " );
 
       lastMove.put(ant.id, dir);
 

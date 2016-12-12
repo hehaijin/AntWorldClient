@@ -313,12 +313,12 @@ public class ExplorationManager
     }
 
     LinkedList<Vertex> p = vertexList(start, end);
-    int size = p.size();
-    for(int i = 0; i < size; i++)
-    {
-      Vertex v = p.removeFirst();
-      System.out.println(v.x + " " + v.y);
-    }
+//    int size = p.size();
+//    for(int i = 0; i < size; i++)
+//    {
+//      Vertex v = p.removeFirst();
+//      System.out.println(v.x + " " + v.y);
+//    }
 
     Vertex current = start;
     Vertex next = p.removeFirst();
