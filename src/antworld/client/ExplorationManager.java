@@ -17,31 +17,55 @@ public class ExplorationManager
   {
     Coordinate co;
     boolean visited = false;
+    short color;
     ArrayList<Vertex> adjacent = new ArrayList<>();
     HashMap<Vertex, Path> paths = new HashMap<>();
+    int cost_so_far = Integer.MAX_VALUE;
+    int cost_estimate = Integer.MAX_VALUE;
+    int x;
+    int y;
+    Vertex pre;
 
     public Vertex(int x, int y)
     {
       co = new Coordinate(x,y);
+      this.x = x/AIconstants.BLOCK_SIZE;
+      this.y = y/AIconstants.BLOCK_SIZE;
     }
+
+    public Path getPath(Vertex v)
+    {
+      return this.paths.get(v);
+    }
+
+    public int costestimate(Vertex v, Vertex u)
+    {
+      return Coordinate.manhattanDistance(v.x,v.y,u.x,u.y);
+    }
+
+//    public int getCost(Vertex v)
+//    {
+//      return this.cost.get(v);
+//    }
   }
 
   Graph graph;
+  int xTotal = 5000/AIconstants.BLOCK_SIZE;
+  int yTotal = 2500/AIconstants.BLOCK_SIZE;
 
 //  private ArrayList<>
 
+  private ArrayList<Vertex> visited = new ArrayList<>();
   private Vertex[][] vertices;
 
   public ExplorationManager(Graph graph)
   {
     this.graph = graph;
+    genVertices();
   }
 
-  public void genVertices()
+  private void genVertices()
   {
-    int xTotal = 5000/AIconstants.BLOCK_SIZE;
-    int yTotal = 2500/AIconstants.BLOCK_SIZE;
-
     vertices = new Vertex[xTotal][yTotal];
 
     for(int col = 0; col < xTotal; col++)
@@ -76,7 +100,7 @@ public class ExplorationManager
         {
           for (Vertex v1 : v0.adjacent)
           {
-            v0.paths.put(v1, graph.findPath(v0.co.getX(), v0.co.getY(), v1.co.getX(), v1.co.getY()));
+            v0.paths.put(v1, Path.straightLine(v0.co.getX(), v0.co.getY(), v1.co.getX(), v1.co.getY()));
           }
         }
       }
@@ -104,10 +128,10 @@ public class ExplorationManager
     }
   }
 
-  public Vertex findClosestVertex(AntData ant)
+  private Vertex findClosestVertex(Coordinate c)
   {
-    int col = ant.gridX;
-    int row = ant.gridY;
+    int col = c.getX();
+    int row = c.getY();
 
     try
     {
@@ -123,108 +147,119 @@ public class ExplorationManager
     return null;
   }
 
-  public Path genPath(Vertex start, Vertex end)
+  private void reset()
   {
-    long t1 = System.currentTimeMillis();
-    int startx = start.co.getX();
-    int starty = start.co.getY();
-    int endx = end.co.getX();
-    int endy = end.co.getY();
-
-    Graph.Nodeinfo[][] runinfo=new Graph.Nodeinfo[worldWidth][worldHeight];
-
-    for (int x = 0; x < worldWidth; x++)
+    for(int col = 0; col < xTotal; col++)
     {
-      for (int y = 0; y < worldHeight; y++)
+      for (int row = 0; row < yTotal; row++)
       {
-        runinfo[x][y]=new Graph.Nodeinfo(x,y);
-        runinfo[x][y].cost_estimate = Integer.MAX_VALUE;
-        runinfo[x][y].cost_so_far = Integer.MAX_VALUE;
-        runinfo[x][y].color = 1;
-        runinfo[x][y].pre = null;
+        if(vertices[col][row] != null)
+        {
+          vertices[col][row].cost_estimate = Short.MAX_VALUE;
+          vertices[col][row].cost_so_far = Short.MAX_VALUE;
+        }
       }
     }
+  }
 
-    int s = 0;
-    int t = 0;
+  private ArrayList<Vertex> vertexList(Vertex start, Vertex end)
+  {
+    long t1 = System.currentTimeMillis();
 
-    for (int i = 0; i < 9; i++)
-    {
-      if (start.connections[i] > 0)
-        s++;
-      if (end.connections[i] > 0)
-        t++;
+    int startx = start.co.getX()/AIconstants.BLOCK_SIZE;
+    int starty = start.co.getY()/AIconstants.BLOCK_SIZE;
+    int endx = end.co.getX()/AIconstants.BLOCK_SIZE;
+    int endy = end.co.getY()/AIconstants.BLOCK_SIZE;
 
-    }
-    if (s == 0)
-      System.out.println("no path from start");
-    if (t == 0)
-      System.out.println("no path to end");
+    reset();
 
-    //  initiateGraph();
-    runinfo[startx][starty].color = 0;
-    runinfo[startx][starty].cost_so_far = 0;
-    PriorityQueue<Graph.Nodeinfo> frontier = new PriorityQueue<>(100, new Comparator<Graph.Nodeinfo>()
+    // TODO: might need to check if enough connections
+
+    vertices[startx][starty].cost_so_far = 0;
+
+    PriorityQueue<Vertex> frontier = new PriorityQueue<>(100, new Comparator<Vertex>()
     {
 
       @Override
-      public int compare(Graph.Nodeinfo o1, Graph.Nodeinfo o2)
+      public int compare(Vertex o1, Vertex o2)
       {
         // TODO Auto-generated method stub
         return o1.cost_so_far + o1.cost_estimate - o2.cost_so_far - o2.cost_estimate;
       }
     });
 
-    frontier.offer(runinfo[startx][starty]);
+    frontier.offer(vertices[startx][starty]);
 
     System.out.println("start calculating path");
     loop: while (frontier.size() > 0)
     {
-      Graph.Nodeinfo u = frontier.poll();
+      Vertex u = frontier.poll();
 
-      for (int i = 0; i < 9; i++)
+      for (Vertex v : u.adjacent)
       {
-
-        if (world[u.x][u.y].connections[i] > 0)
+        if (v.color == 1)
         {
-          int m = i / 3 - 1;
-          int n = i % 3 - 1;
-
-          Graph.Nodeinfo v = runinfo[u.x + m][u.y + n];
-          if (v.color == 1)
+          v.color = 0;
+          // TODO this will either be cost or just + 1
+          if (v.cost_so_far > u.cost_so_far + 1)
           {
-            v.color = 0;
-            if (v.cost_so_far > u.cost_so_far + world[u.x][u.y].connections[i])
-            {
-              v.cost_so_far = u.cost_so_far + world[u.x][u.y].connections[i];
-              v.cost_estimate = v.cost_so_far + costestimate(v, runinfo[end.x][end.y]);
-            }
-            v.pre = u;
-            frontier.offer(v);
-            // System.out.println("adding Node "+v.x+ " "+ v.y+ " to the
-            // frountier");
+            v.cost_so_far = u.cost_so_far + 1;
+            v.cost_estimate = v.cost_so_far + v.costestimate(v, vertices[end.x][end.y]);
           }
-          if (v.x == end.x && v.y==end.y)
-            break loop;
+          v.pre = u;
+          frontier.offer(v);
         }
+        if (v.x == end.x && v.y == end.y)
+          break loop;
 
       }
-
     }
 
     // adding nodes to the path
-    Path path = new Path();
-    Graph.Nodeinfo p = runinfo[end.x][end.y];
-    Graph.Nodeinfo pre = p.pre;
+    ArrayList<Vertex> list = new ArrayList<>();
+    Vertex p = vertices[end.x][end.y];
+    Vertex pre = p.pre;
     // path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
     while (p.pre != null)
     {
-      path.add(Coordinate.getDirection(p.x - pre.x, p.y - pre.y));
+      list.add(p);
       p = pre;
       pre = p.pre;
 
     }
     System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
+    return list;
+  }
+
+  public Path genPath(Coordinate s, Vertex end)
+  {
+    Vertex start = vertices[s.getX()/AIconstants.BLOCK_SIZE][s.getY()/AIconstants.BLOCK_SIZE];
+
+    ArrayList<Vertex> p = vertexList(start, end);
+
+    Vertex current = findClosestVertex(s);
+    Vertex next = start;
+
+    Path path = Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY());
+
+    current = start;
+    next = p.remove(0);
+
+//    path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
+    path.addPathToHead(current.getPath(next));
+
+    while(p.size() > 0)
+    {
+      current = next;
+      next = p.remove(0);
+//      path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
+      path.addPathToHead(current.getPath(next));
+    }
     return path;
+  }
+
+  public Vertex randomUnexploredVertex()
+  {
+    return visited.remove(visited.size());
   }
 }

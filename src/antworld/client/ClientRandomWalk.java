@@ -50,7 +50,6 @@ public class ClientRandomWalk
   private HashSet<Integer> antsForWater=new HashSet<>();
   private HashMap<FoodData,ArrayList<Integer>> foodSiteAnts=new HashMap<>();
   private HashSet<Integer> freeAnts=new HashSet<>();
-  
 
   private CommData previousData;
 
@@ -93,9 +92,7 @@ public class ClientRandomWalk
        Path p1=allpaths.get(ant.id);;
        p1.addPathToHead(p1);  
       }
-      
     }
-    
   }
   
 //  private boolean updateDistanceFromNest(CommData data)
@@ -124,7 +121,7 @@ public class ClientRandomWalk
     if (!isConnected) System.exit(0);
 
     // TODO perform this on separate thread?
-//    walk = new ExplorationManager(world);
+    walk = new ExplorationManager(world);
 
     CommData data = obtainNest();
 
@@ -330,10 +327,6 @@ public class ClientRandomWalk
     
     checkAndDispatchWaterAnts(commData);
     
-    
-    
-    
-    
     for (AntData ant : commData.myAntList)
     {
       AntAction action = chooseAction(commData, ant);
@@ -411,10 +404,8 @@ public class ClientRandomWalk
         group.add(ant);
         ants.remove(ant);
       }
-      
     }
-    
-    
+
     for(AntData ant: group)
     {
       Path p=Path.straightLine(ant.gridX, ant.gridY, ant0.gridX, ant0.gridY);
@@ -458,7 +449,6 @@ public class ClientRandomWalk
       {
         ants.add(ant);
       }
-      
     }
   
     return ants;
@@ -807,9 +797,18 @@ public class ClientRandomWalk
    */
   private boolean goExplore(CommData data, AntData ant, AntAction action)
   {
-//    System.out.println("EXPLORE");
     Direction dir = Direction.getRandomDir();
-    //Direction dir = Direction.NORTH;
+    if(alltasks.get(ant.id) == Task.EXPLORE)
+    {
+      if(allpaths.get(ant.id).size() != 0)
+      {
+        dir = allpaths.get(ant.id).getNext();
+      }
+      else
+      {
+        allpaths.replace(ant.id, walk.genPath(new Coordinate(ant.gridX, ant.gridY), walk.randomUnexploredVertex()));
+      }
+    }
     action.type = AntActionType.MOVE;
     action.direction = dir;
     return true;
