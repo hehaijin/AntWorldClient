@@ -26,8 +26,8 @@ public class ExplorationManager
     public Vertex(int x, int y)
     {
       co = new Coordinate(x,y);
-      this.x = x/AIconstants.BLOCK_SIZE;
-      this.y = y/AIconstants.BLOCK_SIZE;
+      this.x = co.getX()/AIconstants.BLOCK_SIZE;
+      this.y = co.getY()/AIconstants.BLOCK_SIZE;
     }
 
 //    public Path getPath(Vertex v)
@@ -43,8 +43,8 @@ public class ExplorationManager
     public Vertex copy()
     {
       Vertex copy = new Vertex(this.co.getX(), this.co.getY());
-      copy.x = x/AIconstants.BLOCK_SIZE;
-      copy.y = y/AIconstants.BLOCK_SIZE;
+      copy.x = co.getX()/AIconstants.BLOCK_SIZE;
+      copy.y = co.getY()/AIconstants.BLOCK_SIZE;
       copy.visited = this.visited;
 
       return copy;
@@ -313,7 +313,12 @@ public class ExplorationManager
     }
 
     LinkedList<Vertex> p = vertexList(start, end);
-
+    int size = p.size();
+    for(int i = 0; i < size; i++)
+    {
+      Vertex v = p.removeFirst();
+      System.out.println(v.x + " " + v.y);
+    }
 
     Vertex current = start;
     Vertex next = p.removeFirst();
