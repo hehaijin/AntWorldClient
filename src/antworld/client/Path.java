@@ -63,18 +63,17 @@ public class Path
     int ydiff = endY - startY;
     int xdiff_abs = Math.abs(xdiff);
     int ydiff_abs = Math.abs(ydiff);
-    int dirX = 0;
-    int dirY = 0;
-
-    if(xdiff != 0)
-    {
-      dirX = xdiff / xdiff_abs;
-    }
-    if(ydiff != 0)
-    {
-      dirY = ydiff / ydiff_abs;
-    }
-
+    int dirX; 
+    if(xdiff_abs!=0) 
+     dirX= xdiff/xdiff_abs;
+    else dirX=0;
+    
+    int dirY; 
+    if(ydiff_abs!=0) 
+      dirY= ydiff/ydiff_abs;
+    else dirY=0;
+   // int dirX = xdiff/xdiff_abs;
+  //  int dirY = ydiff/ydiff_abs;
     Direction diag = Coordinate.getDirection(dirX, dirY);
     Direction straightX = Coordinate.getXDirection(xdiff);
     Direction straightY = Coordinate.getYDirection(ydiff);
