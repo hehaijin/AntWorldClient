@@ -105,14 +105,14 @@ public class Coordinate
 
   public static Direction getXDirection(int xdiff)
   {
-    if(xdiff < 0) return Direction.EAST;
-    return Direction.WEST;
+    if(xdiff < 0) return Direction.WEST;
+    return Direction.EAST;
   }
 
   public static Direction getYDirection(int ydiff)
   {
-    if(ydiff < 0) return Direction.SOUTH;
-    return Direction.NORTH;
+    if(ydiff < 0) return Direction.NORTH;
+    return Direction.SOUTH;
   }
 
   public static int linearDistance(Coordinate co1, Coordinate co2)

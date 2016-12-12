@@ -10,7 +10,7 @@ import java.util.*;
  */
 public class ExplorationManager
 {
-  private class Vertex
+  public class Vertex
   {
     Coordinate co;
     boolean visited = false;
@@ -61,7 +61,7 @@ public class ExplorationManager
 
 //  private ArrayList<>
 
-  private ArrayList<Vertex> visited = new ArrayList<>();
+  private ArrayList<Vertex> unvisited = new ArrayList<>();
   private Vertex[][] vertices;
 
   public ExplorationManager(Graph graph)
@@ -81,6 +81,7 @@ public class ExplorationManager
         if(Graph.getLandType((col)*AIconstants.BLOCK_SIZE, (row)*AIconstants.BLOCK_SIZE) == LandType.GRASS)
         {
           vertices[col][row] = new Vertex((col) * AIconstants.BLOCK_SIZE, (row) * AIconstants.BLOCK_SIZE);
+          unvisited.add(vertices[col][row]);
         }
       }
     }
@@ -120,7 +121,13 @@ public class ExplorationManager
     if((col = x % AIconstants.BLOCK_SIZE) == 0 && (row = y % AIconstants.BLOCK_SIZE) == 0)
     {
       vertices[col][row].visited = true;
+      unvisited.remove(vertices[col][row]);
     }
+  }
+
+  public Vertex getUnexploredVertex()
+  {
+    return unvisited.get(Constants.random.nextInt(unvisited.size()));
   }
 
   private void genAdjacency(Vertex v, int col, int row)
@@ -271,6 +278,7 @@ public class ExplorationManager
       pre = p.pre;
 
     }
+    System.out.println("Done calculating path");
     return list;
   }
 
@@ -302,16 +310,19 @@ public class ExplorationManager
     return path;
   }
 
-  public Vertex randomUnexploredVertex()
-  {
-    return visited.remove(visited.size());
-  }
-
   public static void main(String[] args)
   {
     Graph g = new Graph();
     ExplorationManager ex = new ExplorationManager(g);
 
-    ex.genPath(new Coordinate(300,300), ex.vertices[119][41]);
+    Path p = ex.genPath(new Coordinate(300,300), ex.vertices[15][14]);
+    int size = p.size();
+    System.out.println("Size : " + size);
+    Direction d;
+    for(int i = 0; i < size; i++)
+    {
+      d = p.getNext();
+      System.out.println(d.ordinal());
+    }
   }
 }

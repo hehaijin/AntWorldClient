@@ -100,22 +100,37 @@ public class ClientRandomWalk
     }
   }
 
-//  class Explorer implements Runnable
-//  {
-//
-//  }
+  class Explorer implements Runnable
+  {
+    ExplorationManager.Vertex goTo;
+    AntData ant;
+
+    public Explorer(AntData ant, ExplorationManager.Vertex v)
+    {
+      this.ant = ant;
+      goTo = v;
+    }
+
+    @Override
+    public void run()
+    {
+      Path p = explore.genPath(new Coordinate(ant.gridX,ant.gridY), goTo);
+      if(allpaths.get(ant.id) == null) allpaths.put(ant.id, p);
+      else allpaths.replace(ant.id, p);
+    }
+  }
 
   public ClientRandomWalk(String host, int portNumber, TeamNameEnum team)
   {
     myTeam = team;
     System.out.println("Starting " + team +" on " + host + ":" + portNumber + " at "
       + System.currentTimeMillis());
+    explore = new ExplorationManager(world);
 
     isConnected = openConnection(host, portNumber);
     if (!isConnected) System.exit(0);
 
     // TODO perform this on separate thread?
-    explore = new ExplorationManager(world);
 
     CommData data = obtainNest();
 
@@ -320,11 +335,7 @@ public class ClientRandomWalk
     else changeDir = 0;
     
 
-    checkAndDispatchWaterAnts(commData);
-    
-
-
-
+//    checkAndDispatchWaterAnts(commData);
 
     for (AntData ant : commData.myAntList)
     {
@@ -845,11 +856,29 @@ public class ClientRandomWalk
    */
   private boolean goExplore(CommData data, AntData ant, AntAction action)
   {
-//    System.out.println("EXPLORE");
-    Direction dir = Direction.getRandomDir();
-    //Direction dir = Direction.NORTH;
-    action.type = AntActionType.MOVE;
-    action.direction = dir;
+    if(freeAnts.contains(ant.id))
+    {
+      freeAnts.remove(ant.id);
+
+      System.out.println("a");
+      if(alltasks.get(ant.id) == null) alltasks.put(ant.id, Task.EXPLORE);
+      else alltasks.replace(ant.id, Task.EXPLORE);
+      System.out.println("b");
+
+//      if(pool.)
+      pool.submit(new Explorer(ant, explore.getUnexploredVertex()));
+    }
+    if(allpaths.get(ant.id) != null && allpaths.get(ant.id).size() != 0)
+    {
+      System.out.println("looking");
+      Direction dir = allpaths.get(ant.id).getNext();
+      action.type = AntActionType.MOVE;
+      action.direction = dir;
+    }
+    else
+    {
+      action.type = AntActionType.STASIS;
+    }
     return true;
   }
 
@@ -896,9 +925,7 @@ public class ClientRandomWalk
       {
         newfoodsite.add(new Coordinate(fd.gridX, fd.gridY));
       }
-
     }
-
     return newfoodsite;
   }
 
