@@ -31,7 +31,7 @@ public class ClientRandomWalk
   private ExplorationManager explore;
   private boolean firstRun = true;
   private int outTotal = 0;
-  private int tick = 960;
+  private int tick = 0;
 
   private Socket clientSocket;
 
@@ -147,6 +147,11 @@ public class ClientRandomWalk
 
     mainGameLoop(data);
     closeAll();
+  }
+
+  private void birthAnts(CommData data)
+  {
+//    data.foodStockPile[]
   }
 
   private boolean openConnection(String host, int portNumber)
@@ -894,17 +899,17 @@ public class ClientRandomWalk
 
     if(allpaths.get(ant.id) != null && allpaths.get(ant.id).size() != 0)
     {
-      // collision handling
-      if(ant.myAction.type == AntActionType.STASIS)
-      {
-        if(lastMove.get(ant.id) != null)
-        {
-          action.type = AntActionType.MOVE;
-          action.direction = Coordinate.generalDir(lastMove.get(ant.id));
-          System.out.println("b ");
-          return true;
-        }
-      }
+//      // collision handling
+//      if(ant.myAction.type == AntActionType.STASIS)
+//      {
+//        if(lastMove.get(ant.id) != null)
+//        {
+//          action.type = AntActionType.MOVE;
+//          action.direction = Coordinate.generalDir(lastMove.get(ant.id));
+//          System.out.println("b ");
+//          return true;
+//        }
+//      }
 
       Direction dir = allpaths.get(ant.id).getNext();
       Direction truDir =Coordinate.generalDir(dir);
