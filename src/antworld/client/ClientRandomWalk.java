@@ -28,7 +28,6 @@ public class ClientRandomWalk
   private boolean isConnected = false;
   private NestNameEnum myNestName = null;
   private int centerX, centerY;
-  private ExplorationManager explore;
   private boolean firstRun = true;
   private int outTotal = 0;
   private int tick = 0;
@@ -37,6 +36,9 @@ public class ClientRandomWalk
 
 
   private Graph world=new Graph();
+  private ExplorationManager explore;
+  private BirthManager manager;
+
   private static ArrayList<Coordinate> foodLocations = new ArrayList<>();
 
   // TODO read in file and write here
@@ -46,6 +48,7 @@ public class ClientRandomWalk
   private ConcurrentHashMap<Integer, Boolean> pathIsBeingExplored = new ConcurrentHashMap<>();
   private HashMap<Integer, Boolean> attacked = new HashMap<>();
 
+  private Coordinate waterlocation;
   private ArrayList<Path> foodPath = new ArrayList<>(); // stores paths to food from colony
   private ArrayList<Path> waterPath = new ArrayList<>(); // stores paths to water from colony
   private ConcurrentHashMap<Integer,Path> allpaths=new ConcurrentHashMap<>(); // for storing shortest path.
@@ -134,38 +137,14 @@ public class ClientRandomWalk
     isConnected = openConnection(host, portNumber);
     if (!isConnected) System.exit(0);
 
-    // TODO perform this on separate thread?
-
     CommData data = obtainNest();
 
-    // for detecting nearest water locations, should not be runned most of the time
-//    WaterLocations water = new WaterLocations();
-//    water.findWater(water.world);
-//    water.waterLocations = water.reduce(data, water.waterLocations);
-//    water.write(data);
+    manager = new BirthManager(data);
+
+    waterlocation=getWaterLocationForNest(data);
 
     mainGameLoop(data);
     closeAll();
-  }
-
-  private AntType getAnt(int ordinal)
-  {
-    if(ordinal == 0) return AntType.ATTACK;
-    if(ordinal == 1) return AntType.DEFENCE;
-    if(ordinal == 2) return AntType.WORKER;
-    if(ordinal == 3) return AntType.MEDIC;
-    if(ordinal == 4) return AntType.VISION;
-    if(ordinal == 5) return AntType.SPEED;
-    return null;
-  }
-
-  private void birthAnts(CommData data)
-  {
-    if(data.myAntList.size() < AIconstants.MIN_ANT_NEST_SIZE)
-    {
-      AntData newAnt = new AntData(Constants.UNKNOWN_ANT_ID, getAnt(Constants.random.nextInt(6)), myNestName, myTeam);
-      data.myAntList.add(newAnt);
-    }
   }
 
   private boolean openConnection(String host, int portNumber)
@@ -285,8 +264,7 @@ public class ClientRandomWalk
         if (DEBUG) System.out.println("antworld.client.ClientRandomWalk: chooseActions: " + myNestName);
 
         findResources(data);
-        birthAnts(data);
-//        manageAnts(data);
+        manager.birthAnts(data);
         chooseActionsOfAllAnts(data);
 
         CommData sendData = data.packageForSendToServer();
@@ -373,10 +351,7 @@ public class ClientRandomWalk
   private void checkAndDispatchWaterAnts(CommData commData)
   {
     if(antsForWater.size()<AIconstants.antsForWater)
-    { 
-      
-      Coordinate waterlocation=getWaterLocationForNest(commData);
-      
+    {
       Coordinate co2=new Coordinate(centerX+200, centerY+200);
       
       ArrayList<AntData> ants=getClosestFreeAnts(commData, co2, AIconstants.antsForWater-antsForWater.size());
@@ -385,8 +360,8 @@ public class ClientRandomWalk
       {
         alltasks.put(ant.id, Task.GOTOWATER);
         antsForWater.add(ant.id);
+        allpaths.put(ant.id, Path.straightLine(ant.gridX, ant.gridY, waterlocation.getX(), waterlocation.getY()));
       }
-      dispatchTo(ants, waterlocation);
     }
   }
   
@@ -641,7 +616,6 @@ public class ClientRandomWalk
   {
     if (ant.underground)
     {
-
       if(ant.health != ant.antType.getMaxHealth() && data.foodStockPile[FoodType.WATER.ordinal()] > 0)
       {
         action.type = AntActionType.HEAL;
@@ -678,6 +652,16 @@ public class ClientRandomWalk
       {
         action.type = AntActionType.STASIS;
         return true;
+      }
+    }
+    else
+    {
+      if(ant.carryType != null)
+      {
+        if(Coordinate.manhattanDistance(centerX,centerY, ant.gridX, ant.gridY) < 19)
+        {
+          action.type = AntActionType.ENTER_NEST;
+        }
       }
     }
     return false;
@@ -802,20 +786,13 @@ public class ClientRandomWalk
     */
   private boolean goHomeIfCarryingOrHurt(CommData data, AntData ant, AntAction action)
   {
-    // TODO might need shortest path here, if carrying there should be a path already, if hurt might need to generate one
-    if(attacked.get(ant.id))
+    if(ant.carryType == FoodType.WATER)
     {
-      // go home
-      return true;
-    }
-    if(ant.health < ant.antType.getMaxHealth()/2)
-    {
-      // go home
-      return true;
-    }
-    if(ant.carryType != null)
-    {
-      // go home
+      allpaths.put(ant.id, Path.straightLine(waterlocation.getX(), waterlocation.getY(), ant.gridX, ant.gridY));
+
+      action.type = AntActionType.MOVE;
+      action.direction = allpaths.get(ant.id).getNext();
+
       return true;
     }
     return false;
@@ -830,28 +807,24 @@ public class ClientRandomWalk
    */
   private boolean pickUpWater(CommData data, AntData ant, AntAction action)
   {
-    FoodData foodData;
-    for (FoodData food : data.foodSet)
+    if(ant.carryType != null && ant.carryType != FoodType.WATER)
     {
-      foodData = food;
-      int spaceleft = 0;
-      if(food.foodType == FoodType.WATER)
+      return false;
+    }
+    if(ant.carryType == null || (ant.carryType == FoodType.WATER))
+    {
+      if(ant.carryUnits < ant.antType.getCarryCapacity())
       {
-        // ant has no water or the ant is carrying water and space for it
-        if (ant.carryType == null || (FoodType.WATER == ant.carryType && ant.carryUnits < ant.antType.getCarryCapacity()))
+        for (int i = 0; i < 9; i++)
         {
-          if (Math.abs(ant.gridX - foodData.gridX) <= 1 && Math.abs(ant.gridY - foodData.gridY) <= 1)
+          int m = i / 3 - 1;
+          int n = i % 3 - 1;
+
+          if(Graph.getLandType(ant.gridX+m, ant.gridY+n) == LandType.WATER)
           {
             action.type = AntActionType.PICKUP;
-            action.direction = Coordinate.getDirection(foodData.gridX - ant.gridX, foodData.gridY - ant.gridY);
-
-            // define amount to pickup
-            spaceleft = ant.antType.getCarryCapacity() - ant.carryUnits;
-            if (spaceleft > 0)
-            {
-              if (food.count >= spaceleft) action.quantity = spaceleft;
-              else action.quantity = food.count;
-            }
+            action.direction = Coordinate.getDirection(m,n);
+            action.quantity = 10;
             return true;
           }
         }
@@ -997,7 +970,7 @@ public class ClientRandomWalk
 
     if (pickUpFoodAdjacent(data, ant, action)) return action;
 
-//    if (goHomeIfCarryingOrHurt(data, ant, action)) return action;
+    if (goHomeIfCarryingOrHurt(data, ant, action)) return action;
 
     if (pickUpWater(data, ant, action)) return action;
     if(goToWater(data, ant, action)) return action;

@@ -5,11 +5,17 @@ The strategy for ant behavior:
 2.	For each ant, the task it is doing.
 3.	For each ant, the path if will go. 
 4.	For each ant, the food location it is associated. (redundant with 1, remember to update both)
-5.	For each ant, it¡¯s being attacked.
+5.	For each ant, itï¿½ï¿½s being attacked.
 3, the global dispatcher:
 1.	Check if any ant is under attack, correspond.  Or check if you want to attack some ant. Ant fleeing home may be considered not associated with any food site.
 2.	Check if any food location requires more labor, and if you have ant in nest, or free exploring ant, dispatch it there.
 3.	Collision detection.
 4, the individual ant.
 1.	check if last move is carried out. If not, repeat, or do something.
-2.	send out next move based on it¡¯s task.
+2.	send out next move based on itï¿½ï¿½s task.
+
+Known issues
+- Ants cannot really find resources and bring them back to nest. They are really good at exploring but all of that is kind
+of redundant if they cannon bring resources home. We have algorithms a shortest path algorithm but we were not able to
+implement it appropriately into the the actual client.
+- Sometimes the server rejects our actions because they are lagging.
