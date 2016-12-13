@@ -149,9 +149,24 @@ public class ClientRandomWalk
     closeAll();
   }
 
+  private AntType getAnt(int ordinal)
+  {
+    if(ordinal == 0) return AntType.ATTACK;
+    if(ordinal == 1) return AntType.DEFENCE;
+    if(ordinal == 2) return AntType.WORKER;
+    if(ordinal == 3) return AntType.MEDIC;
+    if(ordinal == 4) return AntType.VISION;
+    if(ordinal == 5) return AntType.SPEED;
+    return null;
+  }
+
   private void birthAnts(CommData data)
   {
-//    data.foodStockPile[]
+    if(data.myAntList.size() < AIconstants.MIN_ANT_NEST_SIZE)
+    {
+      AntData newAnt = new AntData(Constants.UNKNOWN_ANT_ID, getAnt(Constants.random.nextInt(6)), myNestName, myTeam);
+      data.myAntList.add(newAnt);
+    }
   }
 
   private boolean openConnection(String host, int portNumber)
@@ -271,6 +286,8 @@ public class ClientRandomWalk
         if (DEBUG) System.out.println("antworld.client.ClientRandomWalk: chooseActions: " + myNestName);
 
         findResources(data);
+        birthAnts(data);
+//        manageAnts(data);
         chooseActionsOfAllAnts(data);
 
         CommData sendData = data.packageForSendToServer();
