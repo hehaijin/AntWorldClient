@@ -91,12 +91,11 @@ public class ClientRandomWalk
     @Override
     public void run()
     {
-      // TODO Auto-generated method stub
       Path p=world.findPath(startx, starty,endx,endy);
       for(AntData ant: ants)
       {
        Path p1=allpaths.get(ant.id);;
-       p1.addPathToHead(p1);  
+       p1.addPathToHead(p);
       }
 
     }
@@ -521,7 +520,6 @@ public class ClientRandomWalk
     {
       if((alltasks.get(ant.id)==Task.EXPLORE || alltasks.get(ant.id)==null) && world.getNode(ant.gridX, ant.gridY).landtype==LandType.GRASS)
         availableAnts.add(ant);
-      
     }
   //  System.out.println("available ant size "+ availableAnts.size());
     
@@ -676,7 +674,7 @@ public class ClientRandomWalk
       if(outTotal != AIconstants.ANT_OUT_RATE && (tick % AIconstants.ANT_OUT_TICK == 0))
       {
         outTotal++;
-        alltasks.put(ant.id, Task.GOTOWATER);
+//        alltasks.put(ant.id, Task.GOTOWATER);
         freeAnts.add(ant.id);
         action.type = AntActionType.EXIT_NEST;
         action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));

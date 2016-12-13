@@ -315,11 +315,11 @@ public class Graph
 
     Graph g=new Graph();
 
-//    Path p=g.findPath(300,300, 715,800);
-//    while(p.hasNext())
-//    {
-//      System.out.println(p.getNext());
-//    }
+    Path p=g.findPath(300,300, 715,800);
+    while(p.hasNext())
+    {
+      System.out.println(p.getNext());
+    }
 
     ExplorationManager e = new ExplorationManager(g);
   }

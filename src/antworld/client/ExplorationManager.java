@@ -165,26 +165,19 @@ public class ExplorationManager
     if(col >= 0 && row >= 0 && col < 5000/AIconstants.BLOCK_SIZE && row < 2500/AIconstants.BLOCK_SIZE)
     {
       if (vertices[col][row] != null) return vertices[col][row];
-      else {System.out.println(col + " " + row + " is null");}
     }
     if(col+1 >= 0 && row+1 >= 0 && col+1 < 5000/AIconstants.BLOCK_SIZE && row+1 < 2500/AIconstants.BLOCK_SIZE)
     {
-      if (vertices[col + 1][row + 1] != null) return vertices[col+1][row+1];
-      else {System.out.println(col + " " + row + " is null");}
-
-      }
+      if (vertices[col + 1][row + 1] != null) return vertices[col + 1][row + 1];
+    }
     if(col+1 >= 0 && row >= 0 && col+1 < 5000/AIconstants.BLOCK_SIZE && row < 2500/AIconstants.BLOCK_SIZE)
     {
       if (vertices[col + 1][row] != null) return vertices[col+1][row];
-      else {System.out.println(col + " " + row + " is null");}
-
-      }
+    }
     if(col >= 0 && row+1 >= 0 && col < 5000/AIconstants.BLOCK_SIZE && row+1 < 2500/AIconstants.BLOCK_SIZE)
     {
       if (vertices[col][row + 1] != null) return vertices[col][row+1];
-      else {System.out.println(col + " " + row + " is null");}
-
-      }
+    }
 
     // this situation should never happen, otherwise, how did the ant even get here?
     return null;
