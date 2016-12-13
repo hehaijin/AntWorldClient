@@ -44,6 +44,7 @@ public class ClientRandomWalk
   private int waterAnts = 0;
 
   private static ArrayList<Coordinate> foodLocations = new ArrayList<>();
+  private HashMap<Integer, Coordinate> foodcoordinates = new HashMap<>();
 
   // TODO read in file and write here
   private ArrayList<Coordinate> waterLocations = new ArrayList<>(); // stores some water locations
@@ -53,15 +54,11 @@ public class ClientRandomWalk
   private HashMap<Integer, Boolean> attacked = new HashMap<>();
 
   private Coordinate waterlocation;
-  private ArrayList<Path> foodPath = new ArrayList<>(); // stores paths to food from colony
-  private ArrayList<Path> waterPath = new ArrayList<>(); // stores paths to water from colony
   private ConcurrentHashMap<Integer,Path> allpaths=new ConcurrentHashMap<>(); // for storing shortest path.
   private HashMap<Integer, Direction> lastMove = new HashMap<>();
-  private HashMap<Integer,AntAction> allactions=new HashMap<>(); //used to check if current action is successful
   private HashMap<Integer,Task> alltasks=new HashMap<>();
   private HashSet<Integer> antsForWater=new HashSet<>();
   private HashMap<FoodData,ArrayList<Integer>> foodSiteAnts=new HashMap<>();
-  private HashSet<Integer> freeAnts=new HashSet<>();
 
 // merge this
   private CommData previousData;
@@ -383,6 +380,7 @@ public class ClientRandomWalk
         {
           food++;
           alltasks.put(ant.id, Task.GOTOFOOD);
+          foodcoordinates.put(ant.id, foodLocations.get(Constants.random.nextInt(foodLocations.size())));
         }
         else
         {
@@ -613,7 +611,7 @@ public class ClientRandomWalk
       {
         for(Coordinate cf : foodLocations)
         {
-          if(cf.equals(food.gridX,food.gridY))
+          if(!cf.equals(food.gridX,food.gridY) && (food.foodType != FoodType.MEAT && food.count != 5))
           {
             System.out.println("food found");
             foodLocations.add(new Coordinate(food.gridX, food.gridY));
@@ -799,6 +797,7 @@ public class ClientRandomWalk
               if (food.count >= spaceleft) action.quantity = spaceleft;
               else action.quantity = food.count;
             }
+            allpaths.remove(ant.id);
             return true;
           }
         }
@@ -894,11 +893,12 @@ public class ClientRandomWalk
     if(alltasks.get(ant.id) != Task.GOTOFOOD) return false;
     if(alltasks.get(ant.id) == Task.GOTOFOOD && ant.carryUnits != 0) return false;
 
-    if(alltasks.get(ant.id)==Task.GOTOFOOD && (pathIsBeingExplored.get(ant.id) == null || !pathIsBeingExplored.get(ant.id)) && (allpaths.get(ant.id) == null || allpaths.get(ant.id).size() == 0))
+    if(alltasks.get(ant.id)==Task.GOTOFOOD && (pathIsBeingExplored.get(ant.id) == null || !pathIsBeingExplored.get(ant.id))
+            && (allpaths.get(ant.id) == null || allpaths.get(ant.id).size() == 0))
       {
         pathIsBeingExplored.put(ant.id, Boolean.TRUE);
 
-        ExplorationManager.Vertex v = explore.findClosestVertex(waterlocation);
+        ExplorationManager.Vertex v = explore.findClosestVertex(foodcoordinates.get(ant.id));
 
         pool.submit(new Explorer(ant, v));
       }
@@ -915,7 +915,7 @@ public class ClientRandomWalk
       }
       if(allpaths.get(ant.id) == null || allpaths.get(ant.id).size() == 0)
       {
-        allpaths.put(ant.id, Path.straightLine(ant.gridX, ant.gridY, centerX, centerY));
+        allpaths.put(ant.id, Path.straightLine(ant.gridX, ant.gridY, foodcoordinates.get(ant.id).getX(), foodcoordinates.get(ant.id).getX()));
       }
       else
       {
