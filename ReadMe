@@ -1,3 +1,5 @@
+Authors: Hector Carrillo & Haijin He
+
 The strategy for ant behavior:
 1, global dispatcher dispatches tasks at the beginning of the gameloop, then individual ant carry out task.
 2, local information.
@@ -15,7 +17,15 @@ The strategy for ant behavior:
 2.	send out next move based on it��s task.
 
 Known issues
-- Ants cannot really find resources and bring them back to nest. They are really good at exploring but all of that is kind
-of redundant if they cannon bring resources home. We have algorithms a shortest path algorithm but we were not able to
-implement it appropriately into the the actual client.
+- Ants might crash onto water and get stuck
 - Sometimes the server rejects our actions because they are lagging.
+- Sometimes ants don't get out of nest and don't get assigned a path. They just get stuck.
+- Sometimes for some reason, ants go back to nest without carrying anything and get stuck.
+- There might be a problem with making new ants.
+
+Missing features
+- Distinction between different ant types is non existent
+- No go to enemy, or go to friendly ant
+
+To run please type in the server name as a command line argument. The port number must be changed from constants.
+This is something that was already like this.

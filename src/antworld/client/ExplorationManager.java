@@ -186,7 +186,7 @@ public class ExplorationManager
 
 
   // if the ant is not on a vertex, it finds the closes one too it
-  private Vertex findClosestVertex(Coordinate c)
+  public Vertex findClosestVertex(Coordinate c)
   {
     int x = c.getX();
     int y = c.getY();
