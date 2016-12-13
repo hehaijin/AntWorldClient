@@ -343,7 +343,7 @@ public class ClientRandomWalk
   {
     outTotal = 0;
 
-//    checkAndDispatchWaterAnts(commData);
+   checkAndDispatchWaterAnts(commData);
 
     for (AntData ant : commData.myAntList)
     {
@@ -359,9 +359,13 @@ public class ClientRandomWalk
     
     
     if(antsForWater.size()<AIconstants.antsForWater)
-    {  Coordinate waterlocation=getWaterLocationForNest(commData);
+    { 
       
-      ArrayList<AntData> ants=getClosestFreeAnts(commData, waterlocation, AIconstants.antsForWater-antsForWater.size());
+      Coordinate waterlocation=getWaterLocationForNest(commData);
+      
+      Coordinate co2=new Coordinate(centerX+200, centerY+200);
+      
+      ArrayList<AntData> ants=getClosestFreeAnts(commData, co2, AIconstants.antsForWater-antsForWater.size());
    
     
 
@@ -498,15 +502,30 @@ public class ClientRandomWalk
     ArrayList<AntData> availableAnts=new ArrayList<>();
     for(AntData ant:data.myAntList)
     {
-      if(alltasks.get(ant.id)==Task.EXPLORE && world.getNode(ant.gridX, ant.gridY).landtype==LandType.GRASS)
+      if((alltasks.get(ant.id)==Task.EXPLORE || alltasks.get(ant.id)==null) && world.getNode(ant.gridX, ant.gridY).landtype==LandType.GRASS)
         availableAnts.add(ant);
+      
     }
-
+  //  System.out.println("available ant size "+ availableAnts.size());
     
     ArrayList<AntData> ants=new ArrayList<>();
     ArrayList<Integer> dist=new ArrayList<>();
-   
+
+    for(AntData ant: availableAnts )
+    {
+     
+      dist.add(Coordinate.linearDistance(new Coordinate(ant.gridX, ant.gridY), co));
+    }
+
+    
+    
+    
     Collections.sort(dist);
+    
+    
+    
+    
+    
    // System.out.println(dist);
     int range;
     if(dist.size()==0)
@@ -913,7 +932,7 @@ public class ClientRandomWalk
 
       Direction dir = allpaths.get(ant.id).getNext();
       Direction truDir =Coordinate.generalDir(dir);
-      System.out.println("a " + truDir.ordinal() + " " );
+    //  System.out.println("a " + truDir.ordinal() + " " );
 
       lastMove.put(ant.id, dir);
 
