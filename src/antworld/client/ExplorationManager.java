@@ -5,7 +5,7 @@ import antworld.common.*;
 import java.util.*;
 
 /**
- * This class creates normal distributions for moving in a semi-random direction.
+ * This class divides the map up into blocks based on a constant in AIconstants. These are used for exploration.
  * Created by Hector on 12/7/16.
  */
 public class ExplorationManager
@@ -14,9 +14,9 @@ public class ExplorationManager
   {
     Coordinate co;
     boolean visited = false;
+    // for shortest path
     short color = 1;
     ArrayList<Vertex> adjacent = new ArrayList<>();
-//    HashMap<Vertex, Path> paths = new HashMap<>();
     int cost_so_far = Integer.MAX_VALUE;
     int cost_estimate = Integer.MAX_VALUE;
     int x;
@@ -29,11 +29,6 @@ public class ExplorationManager
       this.x = co.getX()/AIconstants.BLOCK_SIZE;
       this.y = co.getY()/AIconstants.BLOCK_SIZE;
     }
-
-//    public Path getPath(Vertex v)
-//    {
-//      return this.paths.get(v);
-//    }
 
     public int costestimate(Vertex v, Vertex u)
     {
@@ -49,20 +44,37 @@ public class ExplorationManager
 
       return copy;
     }
-
-//    public int getCost(Vertex v)
-//    {
-//      return this.cost.get(v);
-//    }
   }
 
+  private int numVisited = 0;
+
+  // for sorting the vertices based on distance from nest
+  private class CompareV implements Comparator<Vertex>
+  {
+    Coordinate nest;
+
+    public CompareV(int x, int y)
+    {
+      nest = new Coordinate(x,y);
+    }
+
+    @Override
+    public int compare(Vertex v0, Vertex v1)
+    {
+      int mdv0 = Coordinate.manhattanDistance(v0.co, nest);
+      int mdv1 = Coordinate.manhattanDistance(v1.co, nest);
+      return mdv0 - mdv1;
+    }
+  }
+
+  // graph contains world data
   Graph graph;
   int xTotal = 5000/AIconstants.BLOCK_SIZE;
   int yTotal = 2500/AIconstants.BLOCK_SIZE;
 
-//  private ArrayList<>
-
+  // for exploration (dont want to visit the same location twice)
   private ArrayList<Vertex> unvisited = new ArrayList<>();
+
   private Vertex[][] vertices;
 
   public ExplorationManager(Graph graph)
@@ -71,6 +83,7 @@ public class ExplorationManager
     genVertices();
   }
 
+  // gererates vertices from world
   private void genVertices()
   {
     vertices = new Vertex[xTotal][yTotal];
@@ -98,37 +111,31 @@ public class ExplorationManager
       }
     }
 
-//    Vertex v0;
 //    for(int col = 0; col < xTotal; col++)
 //    {
 //      for (int row = 0; row < yTotal; row++)
 //      {
-//        v0 = vertices[col][row];
-//        if(v0 != null)
+//        if (vertices[col][row] != null)
 //        {
-//          for (Vertex v1 : v0.adjacent)
-//          {
-//            v0.paths.put(v1, Path.straightLine(v0.co.getX(), v0.co.getY(), v1.co.getX(), v1.co.getY()));
-//          }
+//          reduceAdjacency(vertices[col][row]);
 //        }
 //      }
 //    }
   }
 
-  public void markVisited(int x, int y)
+  // first sorts then gets the closes unexplored vertex (from nest)
+  public Vertex getUnexploredVertex(int x, int y)
   {
-    int row;
-    int col;
-    if((col = x % AIconstants.BLOCK_SIZE) == 0 && (row = y % AIconstants.BLOCK_SIZE) == 0)
+    Vertex v = unvisited.get(Constants.random.nextInt(unvisited.size()));
+    if(unvisited.size() != numVisited)
     {
-      vertices[col][row].visited = true;
-      unvisited.remove(vertices[col][row]);
+      while (v.visited == true)
+      {
+        v = unvisited.get(Constants.random.nextInt(unvisited.size()));
+      }
+      return v;
     }
-  }
-
-  public Vertex getUnexploredVertex()
-  {
-    return unvisited.get(Constants.random.nextInt(unvisited.size()));
+    return v;
   }
 
   private void genAdjacency(Vertex v, int col, int row)
@@ -138,20 +145,47 @@ public class ExplorationManager
       int m = i / 3 - 1;
       int n = i % 3 - 1;
 
-      if(v.co.getX() + AIconstants.BLOCK_SIZE*m < 5000 && v.co.getX() + AIconstants.BLOCK_SIZE*m >= 0
-              && v.co.getY() + AIconstants.BLOCK_SIZE*n < 2500 && v.co.getY() + AIconstants.BLOCK_SIZE*n >= 0)
+      if(Math.abs(m) != Math.abs(n))
       {
-        if(col+m < vertices.length && row+n < vertices[col+m].length)
+        if (v.co.getX() + AIconstants.BLOCK_SIZE * m < 5000 && v.co.getX() + AIconstants.BLOCK_SIZE * m >= 0
+                && v.co.getY() + AIconstants.BLOCK_SIZE * n < 2500 && v.co.getY() + AIconstants.BLOCK_SIZE * n >= 0)
         {
-          if (vertices[col + m][row + n] != null)
+          if (col + m < vertices.length && row + n < vertices[col + m].length)
           {
-            v.adjacent.add(vertices[col + m][row + n]);
+            if (vertices[col + m][row + n] != null)
+            {
+              if(!crossesWater(v, vertices[col + m][row + n]))
+              {
+                v.adjacent.add(vertices[col + m][row + n]);
+              }
+            }
           }
         }
       }
     }
   }
 
+  private boolean crossesWater(Vertex v, Vertex adj)
+  {
+    Path p;
+    Direction next;
+    p = Path.straightLine(v.co.getX(), v.co.getY(), adj.co.getX(), adj.co.getY());
+    Coordinate c = v.co;
+
+    while (p.size() != 0)
+    {
+      next = p.getNext();
+      c = Coordinate.add(c, next.deltaX(), next.deltaY());
+      if (Graph.getLandType(c.getX(), c.getY()) == LandType.WATER)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+
+  // if the ant is not on a vertex, it finds the closes one too it
   private Vertex findClosestVertex(Coordinate c)
   {
     int x = c.getX();
@@ -183,22 +217,7 @@ public class ExplorationManager
     return null;
   }
 
-  private void reset()
-  {
-    for(int col = 0; col < xTotal; col++)
-    {
-      for (int row = 0; row < yTotal; row++)
-      {
-        if(vertices[col][row] != null)
-        {
-          vertices[col][row].color = 1;
-          vertices[col][row].cost_estimate = Short.MAX_VALUE;
-          vertices[col][row].cost_so_far = Short.MAX_VALUE;
-        }
-      }
-    }
-  }
-
+  // copies the array so that each thread uses its own
   private Vertex[][] copy()
   {
     Vertex[][] temp = new Vertex[xTotal][yTotal];
@@ -229,6 +248,7 @@ public class ExplorationManager
     return temp;
   }
 
+  // generates a shorest path of vertices
   private LinkedList<Vertex> vertexList(Vertex start, Vertex end)
   {
     int startx = start.co.getX()/AIconstants.BLOCK_SIZE;
@@ -290,10 +310,11 @@ public class ExplorationManager
       p = pre;
       pre = p.pre;
     }
-    System.out.println("Done calculating path");
+//    System.out.println("Done calculating path");
     return list;
   }
 
+  // generates a path out of vertices
   public Path genPath(Coordinate s, Vertex end)
   {
     long t1 = System.currentTimeMillis();
@@ -306,18 +327,12 @@ public class ExplorationManager
     }
 
     LinkedList<Vertex> p = vertexList(start, end);
-//    int size = p.size();
-//    for(int i = 0; i < size; i++)
-//    {
-//      Vertex v = p.removeFirst();
-//      System.out.println(v.x + " " + v.y);
-//    }
 
     Vertex current = start;
     Vertex next = p.removeFirst();
     if(next.visited == false)
     {
-      unvisited.remove(next);
+      numVisited++;
       next.visited = true;
     }
 
@@ -325,22 +340,22 @@ public class ExplorationManager
 
     path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
 
-    System.out.println("size of path " + p.size());
     while(p.size() > 0)
     {
       current = next;
       next = p.removeFirst();
       if(next.visited == false)
       {
-        unvisited.remove(next);
+        numVisited++;
         next.visited = true;
       }
       path.addPathToHead(Path.straightLine(current.co.getX(), current.co.getY(), next.co.getX(),next.co.getY()));
     }
-    System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
+//    System.out.println("finding the path takes " + (System.currentTimeMillis() - t1) + "ms");
     return path;
   }
 
+  // for testing
   public static void main(String[] args)
   {
     Graph g = new Graph();
