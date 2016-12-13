@@ -626,8 +626,6 @@ public class ClientRandomWalk
         {
           System.out.println("Food found");
           foodLocations.add(foodCoordinate);
-          System.out.println("Generating Path");
-          // generate path to food from colony
         }
       }
     }
@@ -677,7 +675,6 @@ public class ClientRandomWalk
       if(outTotal != AIconstants.ANT_OUT_RATE && (tick % AIconstants.ANT_OUT_TICK == 0))
       {
         outTotal++;
-//        alltasks.put(ant.id, Task.GOTOWATER);
         freeAnts.add(ant.id);
         action.type = AntActionType.EXIT_NEST;
         action.x = centerX - (Constants.NEST_RADIUS-1) + random.nextInt(2 * (Constants.NEST_RADIUS-1));
@@ -843,11 +840,12 @@ public class ClientRandomWalk
    */
   private boolean pickUpWater(CommData data, AntData ant, AntAction action)
   {
+//    System.out.println("TRYING TO PICK UP WATER");
     if(ant.carryType != null && ant.carryType != FoodType.WATER)
     {
       return false;
     }
-    if(ant.carryType == null || (ant.carryType == FoodType.WATER))
+    if((ant.carryType == null || (ant.carryType == FoodType.WATER) && antsForWater.contains(ant.id)))
     {
       if(ant.carryUnits < ant.antType.getCarryCapacity())
       {
@@ -856,30 +854,21 @@ public class ClientRandomWalk
           int m = i / 3 - 1;
           int n = i % 3 - 1;
 
+          if(ant.gridX+m < 0 || ant.gridX+m >= 5000 || ant.gridY+n < 0 || ant.gridY+n >= 2500)
+          {
+            return false;
+          }
           if(Graph.getLandType(ant.gridX+m, ant.gridY+n) == LandType.WATER)
           {
             action.type = AntActionType.PICKUP;
             action.direction = Coordinate.getDirection(m,n);
             action.quantity = 10;
+            System.out.println("PICKED UP WATER");
             return true;
           }
         }
       }
     }
-    return false;
-  }
-
-  private boolean goToEnemyAnt(CommData data, AntData ant, AntAction action)
-  {
-    // if not aggressive
-    if(alltasks.get(ant.id)==Task.GOTOENIMYANT)
-    {
-      Direction d=allpaths.get(ant.id).getNext();
-      action.direction=d;
-      action.type=AntActionType.MOVE;
-      return true;
-    }
-
     return false;
   }
 
@@ -1037,6 +1026,8 @@ public class ClientRandomWalk
 
     if (ant.ticksUntilNextAction > 0) return ant.myAction;
 
+    if (pickUpWater(data, ant, action)) return action;
+
     if(goToWater(data, ant, action)) return action;
 
     if (exitNest(data, ant, action)) return action;
@@ -1048,14 +1039,8 @@ public class ClientRandomWalk
     if (goHomeIfCarryingOrHurt(data, ant, action)) return action;
 
 
-
-    if (pickUpWater(data, ant, action)) return action;
-
-
     // only for enemy ants close to ant
     //
-//    if (goToEnemyAnt(data, ant, action)) return action;
-//
 //    if (goToFood(data, ant, action)) return action;
 //
 //    if (goToGoodAnt(data, ant, action)) return action;
