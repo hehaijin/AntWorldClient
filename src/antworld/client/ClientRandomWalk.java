@@ -908,6 +908,26 @@ public class ClientRandomWalk
 
     return false;
   }
+  
+  
+  private boolean goToWater(CommData data, AntData ant, AntAction action)
+  {
+    if(alltasks.get(ant.id)==Task.GOTOWATER)
+    {try {
+      Direction d=allpaths.get(ant.id).getNext();
+      action.direction=d;
+      action.type=AntActionType.MOVE;
+      return true;
+    }
+    catch(Exception e)
+    {
+      action.type=AntActionType.STASIS;
+    }
+    }
+
+    return false;
+  }
+
 
   /**
    * Primitive exploration algorithm. Uses a semi random walk which uses a normal distribution of directions.
@@ -979,6 +999,7 @@ public class ClientRandomWalk
 //    if (goHomeIfCarryingOrHurt(data, ant, action)) return action;
 
     if (pickUpWater(data, ant, action)) return action;
+    if(goToWater(data, ant, action)) return action;
 
     // only for enemy ants close to ant
     //
