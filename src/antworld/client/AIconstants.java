@@ -7,7 +7,7 @@ package antworld.client;
 public class AIconstants
 {
   public static final int antsPerFoodPile=10;
-  public static final boolean aggresive=false; // 0 means peaceful.
+  public static final boolean aggresive=true; // 0 means peaceful.
 
   public static final int antsForWater=5;
   
@@ -20,5 +20,7 @@ public class AIconstants
 
   public static final int ANT_OUT_RATE = 5;
   public static final int ANT_OUT_TICK = 100;
+
+  public static final int MIN_ANT_NEST_SIZE = 150;
 
 }
