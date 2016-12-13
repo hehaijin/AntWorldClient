@@ -369,7 +369,7 @@ public class ClientRandomWalk
       
 
       
-      ArrayList<AntData> ants=getClosestFreeAnts(commData, co2, AIconstants.antsForWater-antsForWater.size());
+      ArrayList<AntData> ants=getClosestFreeAnts(commData, waterlocation, AIconstants.antsForWater-antsForWater.size());
 
       for(AntData ant: ants)
       {
