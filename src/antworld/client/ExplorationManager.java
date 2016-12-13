@@ -110,6 +110,17 @@ public class ExplorationManager
         }
       }
     }
+
+//    for(int col = 0; col < xTotal; col++)
+//    {
+//      for (int row = 0; row < yTotal; row++)
+//      {
+//        if (vertices[col][row] != null)
+//        {
+//          reduceAdjacency(vertices[col][row]);
+//        }
+//      }
+//    }
   }
 
   // first sorts then gets the closes unexplored vertex (from nest)
@@ -134,19 +145,45 @@ public class ExplorationManager
       int m = i / 3 - 1;
       int n = i % 3 - 1;
 
-      if(v.co.getX() + AIconstants.BLOCK_SIZE*m < 5000 && v.co.getX() + AIconstants.BLOCK_SIZE*m >= 0
-              && v.co.getY() + AIconstants.BLOCK_SIZE*n < 2500 && v.co.getY() + AIconstants.BLOCK_SIZE*n >= 0)
+      if(Math.abs(m) != Math.abs(n))
       {
-        if(col+m < vertices.length && row+n < vertices[col+m].length)
+        if (v.co.getX() + AIconstants.BLOCK_SIZE * m < 5000 && v.co.getX() + AIconstants.BLOCK_SIZE * m >= 0
+                && v.co.getY() + AIconstants.BLOCK_SIZE * n < 2500 && v.co.getY() + AIconstants.BLOCK_SIZE * n >= 0)
         {
-          if (vertices[col + m][row + n] != null)
+          if (col + m < vertices.length && row + n < vertices[col + m].length)
           {
-            v.adjacent.add(vertices[col + m][row + n]);
+            if (vertices[col + m][row + n] != null)
+            {
+              if(!crossesWater(v, vertices[col + m][row + n]))
+              {
+                v.adjacent.add(vertices[col + m][row + n]);
+              }
+            }
           }
         }
       }
     }
   }
+
+  private boolean crossesWater(Vertex v, Vertex adj)
+  {
+    Path p;
+    Direction next;
+    p = Path.straightLine(v.co.getX(), v.co.getY(), adj.co.getX(), adj.co.getY());
+    Coordinate c = v.co;
+
+    while (p.size() != 0)
+    {
+      next = p.getNext();
+      c = Coordinate.add(c, next.deltaX(), next.deltaY());
+      if (Graph.getLandType(c.getX(), c.getY()) == LandType.WATER)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
 
   // if the ant is not on a vertex, it finds the closes one too it
   private Vertex findClosestVertex(Coordinate c)

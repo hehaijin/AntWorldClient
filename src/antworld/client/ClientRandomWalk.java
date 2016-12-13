@@ -116,7 +116,6 @@ public class ClientRandomWalk
     public void run()
     {
 //      System.out.println("ANT ID: " + ant.id + " GO TO : " + goTo.co.getX() + " " + goTo.co.getY());
-      System.out.println("THIS");
       Path p = explore.genPath(new Coordinate(ant.gridX,ant.gridY), goTo);
 
       allpaths.put(ant.id, p);

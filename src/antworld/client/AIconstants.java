@@ -16,7 +16,7 @@ public class AIconstants
 
   public static final int ThreadPoolSize=10;
   
-  public static final int BLOCK_SIZE = 20;
+  public static final int BLOCK_SIZE = 25;
 
   public static final int ANT_OUT_RATE = 6;
   public static final int ANT_OUT_TICK = 50;

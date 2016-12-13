@@ -77,6 +77,11 @@ public class Coordinate
     return false;
   }
 
+  public static Coordinate add(Coordinate c, int x, int y)
+  {
+    return new Coordinate(c.getX()+x, c.getY() + y);
+  }
+
   /**
    * Checks if two coordinates are equal
    * @param x
