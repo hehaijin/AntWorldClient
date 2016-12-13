@@ -67,7 +67,7 @@ public class ClientRandomWalk
   
   
 //Thread pool for calculating shortest path.
-  ExecutorService pool=Executors.newFixedThreadPool(8);
+  ExecutorService pool=Executors.newFixedThreadPool(AIconstants.ThreadPoolSize);
   
   class SPCalculator implements Runnable
   {
@@ -115,7 +115,8 @@ public class ClientRandomWalk
     @Override
     public void run()
     {
-      System.out.println("ANT ID: " + ant.id + " GO TO : " + goTo.co.getX() + " " + goTo.co.getY());
+//      System.out.println("ANT ID: " + ant.id + " GO TO : " + goTo.co.getX() + " " + goTo.co.getY());
+      System.out.println("THIS");
       Path p = explore.genPath(new Coordinate(ant.gridX,ant.gridY), goTo);
 
       allpaths.put(ant.id, p);
@@ -372,8 +373,6 @@ public class ClientRandomWalk
   
   private void checkAndDispatchWaterAnts(CommData commData)
   {
-    
-    
     if(antsForWater.size()<AIconstants.antsForWater)
     { 
       
@@ -382,8 +381,6 @@ public class ClientRandomWalk
       Coordinate co2=new Coordinate(centerX+200, centerY+200);
       
       ArrayList<AntData> ants=getClosestFreeAnts(commData, co2, AIconstants.antsForWater-antsForWater.size());
-   
-    
 
       for(AntData ant: ants)
       {
@@ -392,9 +389,6 @@ public class ClientRandomWalk
       }
       dispatchTo(ants, waterlocation);
     }
-    
-    
-    
   }
   
   
@@ -421,7 +415,7 @@ public class ClientRandomWalk
       
       
     }
-    System.out.println("the water location is "+ co.getX()+ " "+ co.getY());
+//    System.out.println("the water location is "+ co.getX()+ " "+ co.getY());
     sc.close();    
     return co;
     
@@ -498,7 +492,7 @@ public class ClientRandomWalk
     //TODO here: add direct path to c0 for each ant in the group.
     // calculate the path from c0 to co1, when done, append it to the front of each path in group.
    
-    dispatchTo(ants, co1);
+//    dispatchTo(ants, co1);
 
   }
   
@@ -562,7 +556,7 @@ public class ClientRandomWalk
         if(i==n) break;
       }
     }
-     System.out.println("recruited "+ ants.size()+ " ants.");
+//     System.out.println("recruited "+ ants.size()+ " ants.");
     return ants;
 
   }
@@ -946,7 +940,7 @@ public class ClientRandomWalk
 
       pathIsBeingExplored.put(ant.id, Boolean.TRUE);
 
-      ExplorationManager.Vertex v = explore.getUnexploredVertex();
+      ExplorationManager.Vertex v = explore.getUnexploredVertex(centerX, centerY);
 
       pool.submit(new Explorer(ant, v));
     }
@@ -958,9 +952,19 @@ public class ClientRandomWalk
 //      {
 //        if(lastMove.get(ant.id) != null)
 //        {
+//          for(int i = 0; i < 9; i++)
+//          {
+//            int m = i / 3 - 1;
+//            int n = i % 3 - 1;
+//            if(Graph.getLandType(ant.gridX+m, ant.gridY+n) == LandType.WATER)
+//            {
+//              action.direction = Direction.getRandomDir();
+//              action.type = AntActionType.MOVE;
+//              return true;
+//            }
+//          }
 //          action.type = AntActionType.MOVE;
 //          action.direction = Coordinate.generalDir(lastMove.get(ant.id));
-//          System.out.println("b ");
 //          return true;
 //        }
 //      }

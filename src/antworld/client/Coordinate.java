@@ -4,10 +4,10 @@ import antworld.common.Constants;
 import antworld.common.Direction;
 
 /**
- * This class stores coordinates, does math with them.
+ * This class stores coordinates, does math with them. Also calculates direction based on two coordinates.
  * NOTE: to calculate direction the functions need the difference in x and y coordinates.
  * This difference MUST BE the coordinate of the desired cell - the coordinate of the ant. It can also be thought of as
- * end - start
+ * end - start.
  * Created by Hector on 12/4/16.
  */
 public class Coordinate
@@ -26,14 +26,15 @@ public class Coordinate
     this.y = y;
   }
 
-  private static Direction[] n = {Direction.NORTH, Direction.getLeftDir(Direction.NORTH), Direction.getRightDir(Direction.NORTH)};
-  private static Direction[] s = {Direction.SOUTH, Direction.getLeftDir(Direction.SOUTH), Direction.getRightDir(Direction.SOUTH)};
-  private static Direction[] e = {Direction.EAST, Direction.getLeftDir(Direction.EAST), Direction.getRightDir(Direction.EAST)};
-  private static Direction[] w = {Direction.WEST, Direction.getLeftDir(Direction.WEST), Direction.getRightDir(Direction.WEST)};
-  private static Direction[] nw = {Direction.NORTHWEST, Direction.getLeftDir(Direction.NORTHWEST), Direction.getRightDir(Direction.NORTHWEST)};
-  private static Direction[] ne = {Direction.NORTHEAST, Direction.getLeftDir(Direction.NORTHEAST), Direction.getRightDir(Direction.NORTHEAST)};
-  private static Direction[] se = {Direction.SOUTHEAST, Direction.getLeftDir(Direction.SOUTHEAST), Direction.getRightDir(Direction.SOUTHEAST)};
-  private static Direction[] sw = {Direction.SOUTHWEST, Direction.getLeftDir(Direction.SOUTHWEST), Direction.getRightDir(Direction.SOUTHWEST)};
+  private static Direction[] n = {Direction.NORTH, Direction.getLeftDir(Direction.NORTH), Direction.getRightDir(Direction.NORTH),
+  Direction.NORTH, Direction.NORTH};
+  private static Direction[] s = {Direction.SOUTH,Direction.SOUTH,Direction.SOUTH, Direction.getLeftDir(Direction.SOUTH), Direction.getRightDir(Direction.SOUTH)};
+  private static Direction[] e = {Direction.EAST,Direction.EAST,Direction.EAST, Direction.getLeftDir(Direction.EAST), Direction.getRightDir(Direction.EAST)};
+  private static Direction[] w = {Direction.WEST,Direction.WEST,Direction.WEST, Direction.getLeftDir(Direction.WEST), Direction.getRightDir(Direction.WEST)};
+  private static Direction[] nw = {Direction.NORTHWEST,Direction.NORTHWEST,Direction.NORTHWEST, Direction.getLeftDir(Direction.NORTHWEST), Direction.getRightDir(Direction.NORTHWEST)};
+  private static Direction[] ne = {Direction.NORTHEAST,Direction.NORTHEAST,Direction.NORTHEAST, Direction.getLeftDir(Direction.NORTHEAST), Direction.getRightDir(Direction.NORTHEAST)};
+  private static Direction[] se = {Direction.SOUTHEAST,Direction.SOUTHEAST,Direction.SOUTHEAST, Direction.getLeftDir(Direction.SOUTHEAST), Direction.getRightDir(Direction.SOUTHEAST)};
+  private static Direction[] sw = {Direction.SOUTHWEST,Direction.SOUTHWEST,Direction.SOUTHWEST, Direction.getLeftDir(Direction.SOUTHWEST), Direction.getRightDir(Direction.SOUTHWEST)};
 
   private static Direction[][] dir = {n, ne, e, se, s, sw, w, nw};
 
@@ -135,7 +136,7 @@ public class Coordinate
 
   public static Direction generalDir(Direction d)
   {
-    return dir[d.ordinal()][Constants.random.nextInt(3)];
+    return dir[d.ordinal()][Constants.random.nextInt(5)];
   }
 
 }

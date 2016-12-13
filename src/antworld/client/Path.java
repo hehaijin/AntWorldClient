@@ -3,6 +3,9 @@ package antworld.client;
 import antworld.common.Direction;
 import java.util.LinkedList;
 
+/**
+ * Path class to store paths and perform operations on them
+ */
 public class Path
 {
   private LinkedList<Direction> path = new LinkedList<>();

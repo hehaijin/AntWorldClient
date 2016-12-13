@@ -12,8 +12,7 @@ import java.nio.file.*;
 import java.util.ArrayList;
 
 /**
- * This is to pre-calculate all water locations.
- * TODO should I reduce the number of water locations to just the ones closest to each nest?
+ * This is to pre-calculate all water locations closest to each nest. Only need to run once to generate file.
  * Created by Hector on 12/6/16.
  */
 public class WaterLocations
