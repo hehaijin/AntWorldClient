@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.omg.CORBA.INTERNAL;
+
 import antworld.common.*;
 import antworld.common.AntAction.AntActionType;
 
@@ -92,11 +94,15 @@ public class ClientRandomWalk
     public void run()
     {
       Path p=world.findPath(startx, starty,endx,endy);
+      System.out.print("shortest path calculated for "+startx+" "+ starty+ " to "+ endx+" "+ endy);
       for(AntData ant: ants)
       {
-       Path p1=allpaths.get(ant.id);;
-       p1.addPathToHead(p);
+       Path p1=allpaths.get(ant.id);
+       System.out.print(" "+ ant.id);
+       Path p2=p.deepCopy();
+       p1.addPathToHead(p2);
       }
+      System.out.println();
 
     }
   }
@@ -288,9 +294,13 @@ public class ClientRandomWalk
         birthAnts(data);
 //        manageAnts(data);
         chooseActionsOfAllAnts(data);
+       
 
         CommData sendData = data.packageForSendToServer();
+      //  System.out.println("sending out direction");
+      //  reportWaterAntStatus(sendData);
         
+        previousData=sendData; //update previousData
         if(DEBUG) System.out.println("antworld.client.ClientRandomWalk: Sending>>>>>>>: " + sendData);
         outputStream.writeObject(sendData);
         outputStream.flush();
@@ -301,7 +311,8 @@ public class ClientRandomWalk
         CommData receivedData = (CommData) inputStream.readObject();
         if (DEBUG) System.out.println("antworld.client.ClientRandomWalk: received <<<<<<<<<"+inputStream.available()+"<...\n" + receivedData);
         data = receivedData;
-  
+       // System.out.println("receiving direction");
+      //  reportWaterAntStatus(data);
         
         
         if ((myNestName == null) || (data.myTeam != myTeam))
@@ -310,7 +321,7 @@ public class ClientRandomWalk
         }
 
 
-        previousData=data;//update previousData
+       
 
       }
       catch (IOException e)
@@ -367,21 +378,23 @@ public class ClientRandomWalk
       ant.myAction = action;
     }
     tick++;
+   // System.out.println("the tick is "+ tick);
   }
   
   
   private void checkAndDispatchWaterAnts(CommData commData)
   {
-    
-    
+  
+  
+   
     if(antsForWater.size()<AIconstants.antsForWater)
     { 
       
       Coordinate waterlocation=getWaterLocationForNest(commData);
       
-      Coordinate co2=new Coordinate(centerX+200, centerY+200);
+  
       
-      ArrayList<AntData> ants=getClosestFreeAnts(commData, co2, AIconstants.antsForWater-antsForWater.size());
+      ArrayList<AntData> ants=getClosestFreeAnts(commData, waterlocation, AIconstants.antsForWater-antsForWater.size());
    
     
 
@@ -389,13 +402,14 @@ public class ClientRandomWalk
       {
         alltasks.put(ant.id, Task.GOTOWATER);
         antsForWater.add(ant.id);
+        System.out.println("water ant id "+ ant.id);
       }
       dispatchTo(ants, waterlocation);
     }
-    
-    
-    
+
   }
+  
+  
   
   
   private Coordinate getWaterLocationForNest(CommData comdata) 
@@ -428,7 +442,25 @@ public class ClientRandomWalk
   }
 
   
-  
+  public void reportWaterAntStatus(CommData data)
+  {
+    for(Integer it: antsForWater)
+    {
+
+      for(AntData ant: data.myAntList)
+      {
+        if(it==ant.id)
+          System.out.println("water ant action is "+ant.antType+ " "+ant.myAction);
+        
+      }
+      
+      
+    }
+    
+    
+    
+    
+  }
   
   
   
@@ -910,17 +942,54 @@ public class ClientRandomWalk
   
   private boolean goToWater(CommData data, AntData ant, AntAction action)
   {
+    
     if(alltasks.get(ant.id)==Task.GOTOWATER)
-    {try {
-      Direction d=allpaths.get(ant.id).getNext();
-      action.direction=d;
-      action.type=AntActionType.MOVE;
+    {    
+      
+      try
+      {
+    
+        AntData antold=null;
+        for(AntData ant1: previousData.myAntList)
+        {
+          if(ant1.id==ant.id)
+            antold=ant1;
+        }
+        AntData antreceive=null;
+        for(AntData ant1: data.myAntList)
+        {
+          if(ant1.id==ant.id)
+            antreceive=ant1;
+        }
+        
+       //System.out.println(antold.myAction.type + "        vs        "+ antreceive.myAction.type );
+        
+      if(antold.myAction.type!=AntActionType.STASIS  && antreceive.myAction.type==AntActionType.STASIS)
+      {
+        action.type=antold.myAction.type;
+        action.direction=antold.myAction.direction;
+      //  System.out.println("branch 1 branch 1 branch 1 branch 1 branch 1branch 1branch 1branch 1");
+        return true;
+     
+      }
+      else
+      {
+        Direction d=allpaths.get(ant.id).getNext();
+        action.direction=d;
+        action.type=AntActionType.MOVE;
+        System.out.println(" the water ant goes to "+ d+ "the rest size is "+ allpaths.get(ant.id).size());
+       // System.out.println("branch 2");
+       
+       }
       return true;
     }
     catch(Exception e)
     {
       action.type=AntActionType.STASIS;
+   //   System.out.println("branch 3");
+      return true;
     }
+      
     }
 
     return false;
@@ -987,6 +1056,8 @@ public class ClientRandomWalk
     AntAction action = new AntAction(AntActionType.STASIS);
 
     if (ant.ticksUntilNextAction > 0) return ant.myAction;
+    
+    if(goToWater(data, ant, action)) return action;
 
     if (exitNest(data, ant, action)) return action;
 
@@ -996,8 +1067,10 @@ public class ClientRandomWalk
 
 //    if (goHomeIfCarryingOrHurt(data, ant, action)) return action;
 
+   
+    
     if (pickUpWater(data, ant, action)) return action;
-    if(goToWater(data, ant, action)) return action;
+   
 
     // only for enemy ants close to ant
     //
